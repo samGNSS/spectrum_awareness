@@ -1,0 +1,4 @@
+[Project]
+Name=spectrum_awareness
+Manager=KDevCMakeManager
+VersionControl=kdevgit
