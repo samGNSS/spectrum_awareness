@@ -18,6 +18,10 @@ proc::~proc(){
   delete simdMath;
   delete cfarFilt;
   delete log;
+  
+  fftBuffs.clear();
+  absBuffs.clear();
+  floatBuffs.clear();
 }
 
 void proc::stop(){
@@ -99,8 +103,11 @@ void proc::rx_monitor(radar::charBuff* rx_buff)
     for(int i=0,j=0;i<buffLen;i+=2,++j){
       floatBuffs[band]->iq[j] = radar::complexFloat(rx_buff[i],rx_buff[i+1]);
       floatBuffs[band]->iq[j] /= 128;
-      floatBuffs[band]->metaData.valid = true;
     }
+    floatBuffs[band]->metaData.valid  = true;
+    floatBuffs[band]->metaData.freqHz = frequency;
+    floatBuffs[band]->metaData.time   = 0; //coming soon
+
     rx_buff += buffLen;
   }
   if(waiting){
@@ -126,6 +133,9 @@ void proc::signal_int()
       //get fft
       for(band=0;band<numBands;++band){
 	if(floatBuffs[band]->metaData.valid){
+	  absBuffs[band]->metaData.freqHz = floatBuffs[band]->metaData.freqHz;
+	  absBuffs[band]->metaData.time   = floatBuffs[band]->metaData.time;
+	  
 	  fftProc->getFFT(floatBuffs[band]->iq,fftBuffs[band]->iq);
 	  simdMath->abs(fftBuffs[band]->iq,absBuffs[band]->iq);
 	  cfarFilt->getDetections(absBuffs[band]);
