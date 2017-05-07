@@ -6,6 +6,8 @@
 #include <memory>
 #include <unistd.h>
 
+#include <ctime>
+
 using namespace hackrf;
 
 proc::proc(){}
@@ -43,7 +45,7 @@ void proc::init(int fftSize, int inputSize, int numBands, uint16_t startFreq)
   
   fftProc     = new FFT(fftSize,inputSize);
   simdMath    = new math(fftSize);
-  quiH        = new qui();
+  quiH        = qui::getInstance(nullptr);
   cfarFilt    = new cfar(quiH->getQueue(),1.5*4,200,5,fftSize);
   log         = new console();
   
@@ -91,7 +93,7 @@ void proc::rx_monitor(radar::charBuff* rx_buff)
     }
     
     if(frequency==(uint64_t)(startFreq*1e6)){
-      log->info(__FILENAME__,__LINE__,"Buffer frequency: %d",frequency);
+      log->info(__FILENAME__,__LINE__,"Buffer frequency: %llu",frequency);
       this->sweepStarted = true;
     }
     if(!this->sweepStarted){
@@ -103,10 +105,11 @@ void proc::rx_monitor(radar::charBuff* rx_buff)
     for(int i=0,j=0;i<buffLen;i+=2,++j){
       floatBuffs[band]->iq[j] = radar::complexFloat(rx_buff[i],rx_buff[i+1]);
       floatBuffs[band]->iq[j] /= 128;
+      floatBuffs[band]->iq[j] = radar::complexFloat(1,1);
     }
     floatBuffs[band]->metaData.valid  = true;
     floatBuffs[band]->metaData.freqHz = frequency;
-    floatBuffs[band]->metaData.time   = 0; //coming soon
+    floatBuffs[band]->metaData.time   = std::time(0); //coming soon
 
     rx_buff += buffLen;
   }

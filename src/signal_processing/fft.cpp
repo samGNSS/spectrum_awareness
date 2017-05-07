@@ -51,7 +51,7 @@ void FFT::getIFFT(radar::complexFloat* input, radar::complexFloat* output){
 };
 
 void FFT::setWindow(int windowSize){
-  //TODO: add windowing to the FFT
+  //TODO: add more windows to FFT
   //only hanning for now
   for(int i=0;i<windowSize;++i){
     window[i] = 0.5f*(1 - (float)std::cos(2*M_PI*i/(fftSize-1)));

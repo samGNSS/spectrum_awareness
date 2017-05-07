@@ -31,33 +31,50 @@
 
 #include <qwt-qt4/qwt_legend_item.h>
 
+/*
+ * Class defined as a sigleton to allow the same queue to be used
+ */
 
-
-class qui{
+class qui : public QwtPlot{
+  Q_OBJECT
 public:
-  qui();
+  static qui* getInstance(QWidget* parent);
   ~qui();
   void init();
   void stop();
   void watchQueue();
+  void initWindow();
+  
+//   void setWidget(QWidget* parent);
   
   std::queue<std::vector<radar::cfarDet>>* getQueue();
   
-  
+public slots:
+    void setTimerInterval(double interval);
   
 private:
+  static qui* quiInstance;
+  qui(QWidget* parent);
+  
+  void alignScales();
+  void timerEvent(QTimerEvent *);
+
   
   std::queue<std::vector<radar::cfarDet>> detQueue;
   std::vector<radar::cfarDet> dets;
+  double* fftBin;
+  double* time;
   
   console* log;
   
-  bool enabled;
+  bool enabled,gotDets;
   
   std::thread queueMonitor;
   std::mutex disPlayMtx;
   std::condition_variable waitForDets;
   
+  int d_interval; // timer in ms
+  int d_timerId;
   
 };
 

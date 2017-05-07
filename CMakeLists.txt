@@ -123,7 +123,7 @@ find_library (QWT_LIBRARIES
   /usr/lib
   /opt/local/lib
   /sw/lib
-  /usr/local/lib/qwt.framework
+  /usr/local/lib/qwt.framework 
 )
 
 set(QWT_FOUND FALSE)

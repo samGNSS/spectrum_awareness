@@ -1,0 +1,40 @@
+#include "qtWindow.h"
+
+#include "qtplot.h"
+
+qtWindow::qtWindow(): QMainWindow()
+    {
+        QToolBar *toolBar = new QToolBar(this);
+        toolBar->setFixedHeight(80);
+
+#if QT_VERSION < 0x040000
+        setDockEnabled(TornOff, true);
+        setRightJustification(true);
+#else
+        toolBar->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
+#endif
+        QWidget *hBox = new QWidget(toolBar);
+        QLabel *label = new QLabel("Timer Interval", hBox);
+        QwtCounter *counter = new QwtCounter(hBox);
+        counter->setRange(-1.0, 100.0, 1.0);
+
+        QHBoxLayout *layout = new QHBoxLayout(hBox);
+        layout->addWidget(label);
+        layout->addWidget(counter);
+        layout->addWidget(new QWidget(hBox), 10); // spacer);
+
+#if QT_VERSION >= 0x040000
+        toolBar->addWidget(hBox);
+#endif
+        addToolBar(toolBar);
+
+
+        qui *plot = qui::getInstance(this);
+	
+        setCentralWidget(plot);
+
+        connect(counter, SIGNAL(valueChanged(double)),
+            plot, SLOT(setTimerInterval(double)) );
+
+        counter->setValue(20.0);
+    }
