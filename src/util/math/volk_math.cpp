@@ -6,6 +6,8 @@
 
 #define log2of10 3.3219280948874 
 
+//TODO:: make this a sigleton so that there aren't 15 different copies of this class all over the place. The only issue is the filtering stuff, but that can probably be removed
+
 math::math(int numSamps):buffSize(numSamps){  
   alignment = volk_get_alignment();
   filterInit = false;
@@ -47,9 +49,6 @@ void math::multiply(radar::complexFloat* input1,radar::complexFloat* input2, rad
 void math::getMeanAndStdDev(float* input, float* mean,int numSamps){
   float stdDev = 0;
   volk_32f_stddev_and_mean_32f_x2(&stdDev,mean,input,numSamps);
-//   if(stdDev > 1){
-//     std::cout << "volk_math.cpp | Probably saturated the receiver!!";
-//   }
 }
 
 void math::lin2dB(float* input,float* output){

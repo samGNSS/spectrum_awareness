@@ -54,7 +54,7 @@ void qui::watchQueue(){
   while(enabled){
      
      //watch queue for new detections
-     while(detQueue.empty()){usleep(100);};
+     while(detQueue.empty() and enabled){usleep(100);};
      
      while(!detQueue.empty()){
        dets = detQueue.front();
@@ -99,10 +99,10 @@ void qui::initWindow(){
     // Set curve styles
     cRight->setStyle(QwtPlotCurve::NoCurve);
     cRight->setPaintAttribute(QwtPlotCurve::PaintFiltered);
-//     cRight->setPen(QPen(QColor(Qt::blue),(qreal)5.0,Qt::DotLine));
+
     const QColor &c = Qt::white;
     cRight->setSymbol(QwtSymbol(QwtSymbol::XCross,
-            QBrush(c), QPen(Qt::darkGreen), QSize(5, 5)) );
+            QBrush(c), QPen(Qt::darkGreen), QSize(15, 15)) );
     cRight->attach(this);
     
     cRight->setRawData(time, fftBin, 1024);
@@ -179,8 +179,8 @@ void qui::timerEvent(QTimerEvent *)
       fftBin[i] = (double)dets[i].startBin;
       time[i] = (double)dets[i].time;
     }
-    for(auto det : dets){
-      log->info(__FILENAME__,__LINE__,"Det freq: %llu \t Det bin: %d \t Det time: %d", det.freqHz,det.startBin,det.time);
-    }
+//     for(auto det : dets){
+//       log->info(__FILENAME__,__LINE__,"Det freq: %llu \t Det bin: %d \t Det time: %d", det.freqHz,det.startBin,det.time);
+//     }
     replot();
 }

@@ -25,10 +25,10 @@ int main(int argc, char **argv) {
         ("duration",        po::value<double>(&duration)->default_value(0.0001), "duration for the tx waveform in seconds")
         ("rate",            po::value<uint32_t>(&rate)->default_value(20e6), "sample rate (sps)")
 	("baseBandFilerBw", po::value<uint32_t>(&filterBw)->default_value(rate/2), "baseband filter bandwidth (Hz)")
-	("rxVgaGain",       po::value<uint32_t>(&rxVgaGain)->default_value(8), "rx gain")
+	("rxVgaGain",       po::value<uint32_t>(&rxVgaGain)->default_value(10), "rx gain")
 	("rxLnaGain",       po::value<uint32_t>(&rxLnaGain)->default_value(8), "rx lna gain")
 	("txVgaGain",       po::value<uint32_t>(&txVgaGain)->default_value(32), "tx gain")
-	("centerFreq",      po::value<uint64_t>(&centerFreq)->default_value(94.3e6), "center frequency (Hz)")
+	("centerFreq",      po::value<uint64_t>(&centerFreq)->default_value(2437e6), "center frequency (Hz)")
     ;
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -41,9 +41,9 @@ int main(int argc, char **argv) {
 							    rxLnaGain,
 							    txVgaGain};
  
-    std::vector<radar::freqRange> bands(5); 
+    std::vector<radar::freqRange> bands(1); 
     
-    float freq = 2400e6;
+    float freq = 2437e6;
     float bw = 20e6;
     for(uint i = 0;i<bands.size();++i){
       bands[i].first = freq;

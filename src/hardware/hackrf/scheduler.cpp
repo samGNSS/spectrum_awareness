@@ -100,7 +100,9 @@ void sched::init(std::vector<radar::freqRange> scanBands, float dwellTime){
     num_samples = 8192;
   }else if((int)(this->frontEnd->sampRate * dwellTime) % 8192){
     log->warn(__FILENAME__,__LINE__,"Number of samples must be a multiple of 8192");
-    num_samples = 8192*(int)std::ceil(this->frontEnd->sampRate * dwellTime / 8192);
+    num_samples = 8192*(int)std::ceil((float)this->frontEnd->sampRate * dwellTime / 8192.f);
+    log->warn(__FILENAME__,__LINE__,"Number of samples: %d",num_samples);
+
   }
   
   int num_ranges = scanBands.size();
