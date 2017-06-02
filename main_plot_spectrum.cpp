@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <signal.h> 
 
 #include <boost/program_options.hpp>
 
@@ -8,10 +9,21 @@
 #include "src/util/logger/consoleLog.h"
 #include "src/hardware/hackrf/scheduler.h"
 #include "src/qtplot/qtWindow.h"
+#include "src/udp/udpBase.h"
+
+
+volatile sig_atomic_t flag = 1;
+
+void handleInterrupt(int sig){
+    flag = 0;
+}
 
 namespace po = boost::program_options;
 using namespace radar;
 int main(int argc, char **argv) {
+    
+    signal(SIGINT, handleInterrupt); 
+    
     //variables to be set by po
     std::string args;
     double duration;
@@ -24,10 +36,10 @@ int main(int argc, char **argv) {
         ("args",            po::value<std::string>(&args)->default_value(""), "single device address args")
         ("duration",        po::value<double>(&duration)->default_value(0.0001), "duration for the tx waveform in seconds")
         ("rate",            po::value<uint32_t>(&rate)->default_value(20e6), "sample rate (sps)")
-	("baseBandFilerBw", po::value<uint32_t>(&filterBw)->default_value(rate/2), "baseband filter bandwidth (Hz)")
-	("rxVgaGain",       po::value<uint32_t>(&rxVgaGain)->default_value(10), "rx gain")
-	("rxLnaGain",       po::value<uint32_t>(&rxLnaGain)->default_value(8), "rx lna gain")
-	("txVgaGain",       po::value<uint32_t>(&txVgaGain)->default_value(32), "tx gain")
+	("baseBandFilerBw", po::value<uint32_t>(&filterBw)->default_value(15e6), "baseband filter bandwidth (Hz)")
+	("rxVgaGain",       po::value<uint32_t>(&rxVgaGain)->default_value(20), "rx gain")
+	("rxLnaGain",       po::value<uint32_t>(&rxLnaGain)->default_value(16), "rx lna gain")
+	("txVgaGain",       po::value<uint32_t>(&txVgaGain)->default_value(0), "tx gain")
 	("centerFreq",      po::value<uint64_t>(&centerFreq)->default_value(2437e6), "center frequency (Hz)")
     ;
     po::variables_map vm;
@@ -43,7 +55,7 @@ int main(int argc, char **argv) {
  
     std::vector<radar::freqRange> bands(1); 
     
-    float freq = 2437e6;
+    float freq = 88.7e6;
     float bw = 20e6;
     for(uint i = 0;i<bands.size();++i){
       bands[i].first = freq;
@@ -51,26 +63,16 @@ int main(int argc, char **argv) {
       freq += 2*bw;
     }
     
-    //set up plot window before starting the spectrum monitor
-    QApplication a(argc, argv);
-
-    qtWindow mainWindow;
-#if QT_VERSION < 0x040000
-    a.setMainWidget(&mainWindow);
-#endif
-
-    mainWindow.resize(600,400);
-    mainWindow.show();
+    udpSender* udp = udpSender::getInstance();
+    udp->init(1234);   
     
     //start spectrum monitor
     hackrf::sched* specSched = new hackrf::sched(&frontEnd);
     specSched->findDevices();
-    specSched->init(bands,0.001);
+    specSched->init(bands,0.0001);
     specSched->start(); 
-
-    //block until the window is closed
-    a.exec();
-//     usleep(3000000);
+       
+    while(flag){usleep(10000);};
     
     delete specSched;  
     return 0;

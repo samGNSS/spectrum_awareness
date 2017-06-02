@@ -14,7 +14,6 @@
 #include "../../util/logger/consoleLog.h"
 
 //TODO: implement some kind of common time base, could use the system time but it seems bad...
-//could be worth it to write a wrapper that waits until its time to transmit/record simular to uhd::transmit/recv processes
 namespace hackrf{
   class sched : baseSched{
     public:
@@ -29,7 +28,6 @@ namespace hackrf{
       //private methods
       void rx_callback_control();   //handle rx
       static int rx_callback(hackrf_transfer* transfer);
-      void retune();
       
       //hackrf variables
       const sdr::device_params* frontEnd;

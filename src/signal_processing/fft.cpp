@@ -20,6 +20,7 @@ FFT::FFT(int fftSize,int inputSize):fftSize(fftSize){
 };
 
 FFT::~FFT(){
+  volk_free(window);
   fftwf_destroy_plan(forwardDFT);
   fftwf_destroy_plan(inverseDFT);
   delete simdMath;
@@ -54,6 +55,6 @@ void FFT::setWindow(int windowSize){
   //TODO: add more windows to FFT
   //only hanning for now
   for(int i=0;i<windowSize;++i){
-    window[i] = 0.5f*(1 - (float)std::cos(2*M_PI*i/(fftSize-1)));
+    window[i] = 0.5f*(1.f - (float)std::cos(2*M_PI*i/(fftSize-1)));
   }
 };

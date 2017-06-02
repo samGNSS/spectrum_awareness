@@ -9,14 +9,24 @@ public:
   math(int numSamps);
   ~math();
   void normalize(radar::complexFloat* input,float normConst);
+  void normalize(float* input, float normConst,int numSamps);
+  
   void add(radar::complexFloat* input1,radar::complexFloat* input2,radar::complexFloat* output);
+  void add(float* input1 ,float* input2, float* output,int numSamps);
+  
   void runningAverage(radar::complexFloat* input1,radar::complexFloat* input2,radar::complexFloat* output);
+  
   void magSqrd(radar::complexFloat* input,float* output);
+  
   void add_const(radar::complexFloat* input,float addConst);
+  
   void multiply(radar::complexFloat* input1,radar::complexFloat* input2, radar::complexFloat* output);
   void multiply(radar::complexFloat* input1,radar::complexFloat* input2, radar::complexFloat* output,int numSamps);
+  
   void getMeanAndStdDev(float* input, float* mean,int numSamps);
+  
   void abs(radar::complexFloat* input,float* output);
+  
   void lin2dB(float* input,float* output);
   
   

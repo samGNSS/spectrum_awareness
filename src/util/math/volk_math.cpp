@@ -6,8 +6,6 @@
 
 #define log2of10 3.3219280948874 
 
-//TODO:: make this a sigleton so that there aren't 15 different copies of this class all over the place. The only issue is the filtering stuff, but that can probably be removed
-
 math::math(int numSamps):buffSize(numSamps){  
   alignment = volk_get_alignment();
   filterInit = false;
@@ -25,9 +23,17 @@ void math::add(radar::complexFloat* input1, radar::complexFloat* input2, radar::
   volk_32f_x2_add_32f((float*)output,(float*)input1,(float*)input2,2*buffSize);
 }
 
+void math::add(float* input1 ,float* input2, float* output,int numSamps){
+  volk_32f_x2_add_32f(output, input1, input2,numSamps);
+}
+
 
 void math::normalize(radar::complexFloat* input, float normConst){
   volk_32f_s32f_normalize((float*)input, normConst, 2*buffSize);
+}
+
+void math::normalize(float* input, float normConst,int numSamps){
+  volk_32f_s32f_normalize(input, normConst, numSamps);
 }
 
 void math::abs(radar::complexFloat* input,float* output){
@@ -60,6 +66,9 @@ void math::lin2dB(float* input,float* output){
   volk_32f_s32f_multiply_32f(output,output,10.0f,buffSize);
 }
 
+
+//some FIR filter stuff
+//probably won't run in real time
 void math::initFilter(float* taps, int tapsSize){
   if(!filterInit){
     filterInit = true;

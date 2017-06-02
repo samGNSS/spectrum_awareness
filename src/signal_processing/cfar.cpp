@@ -3,19 +3,22 @@
 #include <cstring>
 #include <volk/volk.h>
 #include <iostream>
-#include <vector>
 
-
-cfar::cfar(std::queue<std::vector<radar::cfarDet>>* quiQueue,float alpha,int numCells,int numGuardBins,int buffLen):alpha(alpha),
+cfar::cfar(float alpha, int numCells, int numGuardBins, int buffLen, int numAvg):alpha(alpha),
                                                      numCells(numCells/2),
                                                      numGuardBins_(numGuardBins),
-                                                     buffLen(buffLen),quiQueue(quiQueue)
+                                                     buffLen(buffLen),numAvg(numAvg)
 {
   forwardSlice = (float*)volk_malloc((this->numCells)*sizeof(float),volk_get_alignment());
   backwardsSlice = (float*)volk_malloc((this->numCells)*sizeof(float),volk_get_alignment());
-  dets.reserve(1024);  
-  simdMath = new math(this->numCells);
+  dets.reserve(buffLen);  
+  simdMath = new math(buffLen);
   log = new console();
+  //udp = udpSender::getInstance();
+  
+  avgCount = 0;
+  avgBuff = (float*)volk_malloc((buffLen)*sizeof(float),volk_get_alignment());  
+  
 }
   
 cfar::~cfar(){
@@ -27,53 +30,55 @@ cfar::~cfar(){
   delete log;
 };
 
-void cfar::getDetections(radar::floatIQ* fftIn){
-  //CFAR processing
-  //First pass at an implementation, its very verbose and could probably be improved a lot
-  int bin = 0;
-  int cell = 0;
-  float forwardMean = 0;
-  float backwardsMean = 0;
-  float noiseEsti = 0;
-  int detCount = 0;
-  
-  radar::cfarDet tmpDet;
+std::vector<radar::cfarDet> cfar::getDetections(radar::floatIQ* fftIn){
+    //CFAR processing
+    int bin = 0;
+    int cell = 0;
+    float forwardMean = 0;
+    float backwardsMean = 0;
+    float noiseEsti = 0;
+    //int detCount = 0;
 
-  for(;bin<buffLen;++bin){
-    //get forwardSlice and backwardsSlice
-    for(cell=0;cell<numCells;++cell){
-      forwardSlice[cell] = fftIn->iq[(bin + numGuardBins_ + cell)%buffLen];
-      backwardsSlice[cell] = fftIn->iq[(bin - numGuardBins_ - cell)%buffLen];
+    radar::cfarDet tmpDet;
+    if(++avgCount==numAvg){
+        simdMath->add(fftIn->iq,avgBuff,avgBuff,buffLen);
+        simdMath->normalize(avgBuff,numAvg,buffLen);
+        avgCount = 0;
+    }else{
+        dets.clear();
+        simdMath->add(fftIn->iq,avgBuff,avgBuff,buffLen);
+        return dets;
     }
-    //get mean of forward slice
-    simdMath->getMeanAndStdDev(forwardSlice,&forwardMean,numCells);
-    //get mean of backwards slice
-    simdMath->getMeanAndStdDev(backwardsSlice,&backwardsMean,numCells);
-    //compare to signal level
-    noiseEsti = (forwardMean+backwardsMean)*alpha;
-    if(fftIn->iq[bin] > noiseEsti){
-      //detection
-        tmpDet.startBin = bin;
-	tmpDet.stopBin  = bin;
-	tmpDet.power    = fftIn->iq[bin];
-	tmpDet.freqHz   = fftIn->metaData.freqHz;
-	tmpDet.time     = fftIn->metaData.time;
-      dets.push_back(tmpDet);
-      ++detCount;
+    
+    dets.reserve(1024);
+
+    for(;bin<buffLen;++bin){
+        //get forwardSlice and backwardsSlice
+        for(cell=0;cell<numCells;++cell){
+            forwardSlice[cell] = fftIn->iq[(bin + numGuardBins_ + cell)%buffLen];
+            backwardsSlice[cell] = fftIn->iq[(bin - numGuardBins_ - cell)%buffLen];
+        }
+        //get mean of forward slice
+        simdMath->getMeanAndStdDev(forwardSlice,&forwardMean,numCells);
+        //get mean of backwards slice
+        simdMath->getMeanAndStdDev(backwardsSlice,&backwardsMean,numCells);
+        //compare to signal level
+        noiseEsti = (forwardMean+backwardsMean)*alpha;
+        if(fftIn->iq[bin] > noiseEsti){
+            //detection
+            if(bin < buffLen/2){
+                tmpDet.startBin = bin + buffLen/2;
+                tmpDet.stopBin  = bin + buffLen/2;
+            }else{
+                tmpDet.startBin = bin - buffLen/2;
+                tmpDet.stopBin  = bin - buffLen/2;
+            }
+            tmpDet.power    = fftIn->iq[bin];
+            tmpDet.freqHz   = fftIn->metaData.freqHz;
+            tmpDet.time     = fftIn->metaData.time;
+            dets.push_back(tmpDet);
+        }
     }
-  }
-  
-  log->debug(__FILENAME__,__LINE__, "Number of detections: %d \t noiseEsti: %f",detCount,noiseEsti);
-  
-  quiQueue->emplace(dets);
-  
-  dets.clear();  
+    //send dets to gui  
+    return dets;
 };
-
-// void initDet(radar::cfarDet& det){
-//   det.startBin = 0;
-//   det.stopBin  = 0;
-//   det.power    = 0;
-//   det.freqHz   = 0;
-//   det.time     = 0;
-// }

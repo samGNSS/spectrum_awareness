@@ -10,6 +10,7 @@
 #include <cstring>
 #include <iostream>
 #include <stdio.h>
+#include <stdint.h>
 
 //file name macro
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
@@ -28,6 +29,7 @@ namespace radar{
     typedef struct{
       uint64_t time;
       uint64_t freqHz;
+      uint8_t band;
       bool valid; 
     }iqMd;
     
@@ -58,15 +60,17 @@ namespace radar{
       iqMd metaData;
     };
     
+#pragma pack(push,1)
     //processed detection
     typedef struct{
-      int startBin;
-      int stopBin;
+      int32_t startBin;
+      int32_t stopBin;
       double power;
       uint64_t time;
       uint64_t freqHz;
-    }cfarDet;    
-      
+    }cfarDet;
+#pragma pack(pop)      
+
     //processed detection
     typedef struct{
       freqRange range;

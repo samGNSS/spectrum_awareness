@@ -1,16 +1,20 @@
-#include <queue>
+#ifndef __CFAR__
+#define __CFAR__
+
 #include <vector>
 
 #include "../util/radarDataTypes.h"
 
 #include "../util/math/volk_math.h"
 #include "../util/logger/consoleLog.h"
+#include "../udp/udpBase.h"
+
 
 class cfar{
 public:
-  cfar(std::queue<std::vector<radar::cfarDet>>* quiQueue,float alpha,int numCells,int numGuardBins,int buffLen);
+  cfar(float alpha, int numCells, int numGuardBins, int buffLen, int numAvg);
   ~cfar();
-  void getDetections(radar::floatIQ* fftIn);
+  std::vector<radar::cfarDet> getDetections(radar::floatIQ* fftIn);
 private:
   //private methods
   void filter();
@@ -20,12 +24,18 @@ private:
   int numCells;
   int numGuardBins_;
   int buffLen;
+  int numAvg;
+  int avgCount;
   
   math* simdMath;
   console* log;
+  udpSender* udp;
   
   float* forwardSlice;
   float* backwardsSlice;
+  float* avgBuff;
   std::vector<radar::cfarDet> dets;
-  std::queue<std::vector<radar::cfarDet>>* quiQueue;
+  
 };
+
+#endif

@@ -15,6 +15,7 @@
 #include "../../util/radarDataTypes.h"
 #include "../../util/math/volk_math.h"
 #include "../../util/logger/consoleLog.h"
+#include "../../udp/udpBase.h"
 #include "../../qtplot/qtplot.h"
 
 namespace hackrf{
@@ -34,9 +35,10 @@ class proc{
     //signal processing classes
     FFT* fftProc; 
     math* simdMath;
-    cfar* cfarFilt;
     console* log;
     qui* quiH;
+    udpSender* udp;
+    std::vector<cfar*> cfarFilt;
     
     //threads
     std::thread detThread;
@@ -47,6 +49,7 @@ class proc{
     std::vector<radar::cfloatIQ*> floatBuffs;
     std::vector<radar::cfloatIQ*> fftBuffs;
     std::vector<radar::floatIQ*> absBuffs;
+    std::vector<radar::cfarDet> procDets;
     
     bool buffRdy,enabled,waiting,sweepStarted;
     
@@ -57,6 +60,7 @@ class proc{
     int numBuffs;
     int numBands;
     uint16_t startFreq;
+    
   };
 }
 #endif

@@ -18,8 +18,9 @@ proc::~proc(){
   
   delete fftProc;
   delete simdMath;
-  delete cfarFilt;
   delete log;
+
+  cfarFilt.clear();
   
   fftBuffs.clear();
   absBuffs.clear();
@@ -39,14 +40,13 @@ void proc::stop(){
 void proc::init(int fftSize, int inputSize, int numBands, uint16_t startFreq)
 {
   this->enabled = true;
-  this->buffLen = inputSize;
+  this->buffLen = inputSize/2;
   this->startFreq = startFreq;
   this->sweepStarted = false;
   
-  fftProc     = new FFT(fftSize,inputSize);
+  fftProc     = new FFT(fftSize,buffLen);
   simdMath    = new math(fftSize);
-  quiH        = qui::getInstance(nullptr);
-  cfarFilt    = new cfar(quiH->getQueue(),1.5*2,200,5,fftSize);
+  udp         = udpSender::getInstance();
   log         = new console();
   
   buffRdy = false;
@@ -64,15 +64,14 @@ void proc::init(int fftSize, int inputSize, int numBands, uint16_t startFreq)
   fftBuffs.resize(numBands);
   absBuffs.resize(numBands);
   for(int buff=0;buff<numBands;++buff){
-    floatBuffs[buff] = new radar::cfloatIQ(inputSize);
-    floatBuffs[buff]->buffSize = inputSize;
+    floatBuffs[buff] = new radar::cfloatIQ(buffLen);
+    floatBuffs[buff]->buffSize = buffLen;
     floatBuffs[buff]->metaData.valid = false;
     fftBuffs[buff] = new radar::cfloatIQ(fftSize); 
     absBuffs[buff] = new radar::floatIQ(fftSize); 
+    
+    cfarFilt.push_back(new cfar(2.5,100,5,fftSize,2));
   }
-  
-  //init gui
-  quiH->init();
   
 }
 
@@ -99,9 +98,10 @@ void proc::rx_monitor(radar::charBuff* rx_buff)
       rx_buff += buffLen;
       continue;
     }
-    log->info(__FILENAME__,__LINE__,"Buffer frequency: %llu",frequency);
+    
+    //log->info(__FILENAME__,__LINE__,"Buffer frequency: %llu",frequency);
     rx_buff += buffLen;
-    for(int i=0,j=0;i<buffLen;i+=2,++j){
+    for(int i=0,j=0;j<buffLen;i+=2,++j){
       floatBuffs[band]->iq[j] = radar::complexFloat(rx_buff[i],rx_buff[i+1]);
       floatBuffs[band]->iq[j] /= 128;
       floatBuffs[band]->iq[j] -= radar::complexFloat(1,1);
@@ -134,18 +134,21 @@ void proc::signal_int()
     if(enabled){
       //get fft
       for(band=0;band<numBands;++band){
-	if(floatBuffs[band]->metaData.valid){
-	  absBuffs[band]->metaData.freqHz = floatBuffs[band]->metaData.freqHz;
-	  absBuffs[band]->metaData.time   = floatBuffs[band]->metaData.time;
-	  
-	  fftProc->getFFT(floatBuffs[band]->iq,fftBuffs[band]->iq);
-	  simdMath->abs(fftBuffs[band]->iq,absBuffs[band]->iq);
-	  cfarFilt->getDetections(absBuffs[band]);
-	  
-	  std::ofstream outFile("iq.bin");
-	  outFile.write(reinterpret_cast<char*>(floatBuffs[band]->iq),floatBuffs[band]->buffSize*sizeof(radar::complexFloat));
-	  outFile.close();
-	}
+        if(floatBuffs[band]->metaData.valid){
+            //set meta data
+            absBuffs[band]->metaData.freqHz = floatBuffs[band]->metaData.freqHz;
+            absBuffs[band]->metaData.time   = floatBuffs[band]->metaData.time;
+            
+            //get fft
+            fftProc->getFFT(floatBuffs[band]->iq,fftBuffs[band]->iq);
+            simdMath->abs(fftBuffs[band]->iq,absBuffs[band]->iq);
+            
+            //send to detector
+            procDets = cfarFilt[band]->getDetections(absBuffs[band]);
+            if(procDets.size() > 0){
+                udp->pubDets(procDets);
+            }
+        }
       }
     }
     lk.unlock();

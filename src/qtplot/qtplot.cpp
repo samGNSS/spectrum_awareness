@@ -18,10 +18,10 @@ qui::qui(QWidget* parent):QwtPlot(parent){
   log = new console();
   
   fftBin = new double[1024];
-  time = new double[1024];
+  pwr = new double[1024];
   
   std::memset(fftBin,0,sizeof(double)*1024);
-  std::memset(time,0,sizeof(double)*1024);
+  std::memset(pwr,0,sizeof(double)*1024);
   
 }
 
@@ -31,7 +31,7 @@ qui::~qui(){
     this->stop();
   
   delete[] fftBin;
-  delete[] time;
+  delete[] pwr;
   delete log;
 }
 
@@ -105,33 +105,15 @@ void qui::initWindow(){
             QBrush(c), QPen(Qt::darkGreen), QSize(15, 15)) );
     cRight->attach(this);
     
-    cRight->setRawData(time, fftBin, 1024);
-    
-//     const bool cacheMode = 
-//         canvas()->testPaintAttribute(QwtPlotCanvas::PaintCached);
-//     
-// #if QT_VERSION >= 0x040000 && defined(Q_WS_X11)
-//     // Even if not recommended by TrollTech, Qt::WA_PaintOutsidePaintEvent 
-//     // works on X11. This has an tremendous effect on the performance..
-// 
-//     canvas()->setAttribute(Qt::WA_PaintOutsidePaintEvent, true);
-// #endif
-// 
-//     canvas()->setPaintAttribute(QwtPlotCanvas::PaintCached, false);
-//     cRight->draw(cRight->dataSize() - size, cRight->dataSize() - 1);
-//     canvas()->setPaintAttribute(QwtPlotCanvas::PaintCached, cacheMode);
-// 
-// #if QT_VERSION >= 0x040000 && defined(Q_WS_X11)
-//     canvas()->setAttribute(Qt::WA_PaintOutsidePaintEvent, false);
-// #endif
+    cRight->setRawData(fftBin, pwr, 1024);
     
     // Axis 
     std::time_t curTime = std::time(0); 
-    setAxisTitle(QwtPlot::xBottom, "Time");
-    setAxisScale(QwtPlot::xBottom, curTime, curTime+50);
+    setAxisTitle(QwtPlot::xBottom, "FFT Bin");
+    setAxisScale(QwtPlot::xBottom, 0, 1024);
 
-    setAxisTitle(QwtPlot::yLeft, "Values");
-    setAxisScale(QwtPlot::yLeft, 0, 1024);
+    setAxisTitle(QwtPlot::yLeft, "Signal Level");
+    setAxisScale(QwtPlot::yLeft, 0, 1);
     
 //     setTimerInterval(10.0); 
 }
@@ -175,12 +157,10 @@ void qui::setTimerInterval(double ms)
 void qui::timerEvent(QTimerEvent *)
 {
 
-    for(uint i=0;i<dets.size();i++){
+    for(size_t i=0;i<dets.size();++i){
       fftBin[i] = (double)dets[i].startBin;
-      time[i] = (double)dets[i].time;
+      pwr[i] = (double)dets[i].power;
     }
-//     for(auto det : dets){
-//       log->info(__FILENAME__,__LINE__,"Det freq: %llu \t Det bin: %d \t Det time: %d", det.freqHz,det.startBin,det.time);
-//     }
+    
     replot();
 }

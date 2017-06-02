@@ -63,7 +63,7 @@ private:
   std::queue<std::vector<radar::cfarDet>> detQueue;
   std::vector<radar::cfarDet> dets;
   double* fftBin;
-  double* time;
+  double* pwr;
   
   console* log;
   
