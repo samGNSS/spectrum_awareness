@@ -44,14 +44,15 @@ int udpSender::init(int port){
 
 void udpSender::watchQueue(){
     while(enabled){
-        if(detQueue.size() > 2){
+        if(detQueue.size() > 11){
             detMtx.lock();
             while(detQueue.size() > 0){
                 detVec.push_back(detQueue.front());
                 detQueue.pop();
             }
             detMtx.unlock();
-            sendDets();
+            sendDets(detVec);
+            detVec.clear();
         }
         if(iQQueue.size() > 100){
             //sendDets();
@@ -70,18 +71,16 @@ void udpSender::pubIQ(radar::cfloatIQ iqData){
 void udpSender::pubDets(std::vector<radar::cfarDet> dets){
     detMtx.lock();
     detQueue.emplace(dets);
-    //log->info(__FILENAME__,__LINE__,"New DET");
     detMtx.unlock();
 }
 
 
 int udpSender::sendData(char* buf, int size){
-    //log->info(__FILENAME__,__LINE__,"Sending data");
     int ret = sendto(this->sock, buf, size, 0, (struct sockaddr*)&sAddr,sizeof(sAddr));
     return ret;
 }
 
-void udpSender::sendDets(){
+void udpSender::sendDets(std::vector<std::vector<radar::cfarDet>> detVec){
     int numBytes;
     for(std::vector<radar::cfarDet> localDet : detVec){
         for(radar::cfarDet det : localDet){
@@ -91,7 +90,6 @@ void udpSender::sendDets(){
             }
         }
     }
-    detVec.clear();
 }
 
 

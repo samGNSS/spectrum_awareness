@@ -47,6 +47,7 @@ void proc::init(int fftSize, int inputSize, int numBands, uint16_t startFreq)
   fftProc     = new FFT(fftSize,buffLen);
   simdMath    = new math(fftSize);
   udp         = udpSender::getInstance();
+  memBuffer   = memBuff::getInst();
   log         = new console();
   
   buffRdy = false;
@@ -70,7 +71,7 @@ void proc::init(int fftSize, int inputSize, int numBands, uint16_t startFreq)
     fftBuffs[buff] = new radar::cfloatIQ(fftSize); 
     absBuffs[buff] = new radar::floatIQ(fftSize); 
     
-    cfarFilt.push_back(new cfar(2.5,100,5,fftSize,2));
+    cfarFilt.push_back(new cfar(3.0,200,5,fftSize,0));
   }
   
 }
@@ -99,8 +100,7 @@ void proc::rx_monitor(radar::charBuff* rx_buff)
       continue;
     }
     
-    //log->info(__FILENAME__,__LINE__,"Buffer frequency: %llu",frequency);
-    rx_buff += buffLen;
+    //rx_buff += buffLen;
     for(int i=0,j=0;j<buffLen;i+=2,++j){
       floatBuffs[band]->iq[j] = radar::complexFloat(rx_buff[i],rx_buff[i+1]);
       floatBuffs[band]->iq[j] /= 128;
@@ -108,7 +108,7 @@ void proc::rx_monitor(radar::charBuff* rx_buff)
     }
     floatBuffs[band]->metaData.valid  = true;
     floatBuffs[band]->metaData.freqHz = frequency;
-    floatBuffs[band]->metaData.time   = std::time(0); //coming soon
+    floatBuffs[band]->metaData.time   = std::time(0); 
 
     rx_buff += buffLen;
   }
@@ -147,6 +147,7 @@ void proc::signal_int()
             procDets = cfarFilt[band]->getDetections(absBuffs[band]);
             if(procDets.size() > 0){
                 udp->pubDets(procDets);
+                memBuffer->publishDets(procDets);
             }
         }
       }

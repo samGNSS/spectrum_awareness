@@ -10,11 +10,13 @@
 #include <condition_variable>
 
 #include "../../signal_processing/cfar.h"
+#include "../../signal_processing/histogram.h"
 #include "../../signal_processing/fft.h"
 #include "driver/hackrf.h"
 #include "../../util/radarDataTypes.h"
 #include "../../util/math/volk_math.h"
 #include "../../util/logger/consoleLog.h"
+#include "../../util/buffer/memBuffer.h"
 #include "../../udp/udpBase.h"
 #include "../../qtplot/qtplot.h"
 
@@ -38,6 +40,7 @@ class proc{
     console* log;
     qui* quiH;
     udpSender* udp;
+    memBuff* memBuffer;
     std::vector<cfar*> cfarFilt;
     
     //threads

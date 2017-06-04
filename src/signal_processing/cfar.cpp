@@ -3,6 +3,7 @@
 #include <cstring>
 #include <volk/volk.h>
 #include <iostream>
+#include <time.h>
 
 cfar::cfar(float alpha, int numCells, int numGuardBins, int buffLen, int numAvg):alpha(alpha),
                                                      numCells(numCells/2),
@@ -11,20 +12,13 @@ cfar::cfar(float alpha, int numCells, int numGuardBins, int buffLen, int numAvg)
 {
   forwardSlice = (float*)volk_malloc((this->numCells)*sizeof(float),volk_get_alignment());
   backwardsSlice = (float*)volk_malloc((this->numCells)*sizeof(float),volk_get_alignment());
-  dets.reserve(buffLen);  
   simdMath = new math(buffLen);
   log = new console();
-  //udp = udpSender::getInstance();
-  
-  avgCount = 0;
-  avgBuff = (float*)volk_malloc((buffLen)*sizeof(float),volk_get_alignment());  
-  
 }
   
 cfar::~cfar(){
   volk_free(forwardSlice);
   volk_free(backwardsSlice);
-  dets.clear();
   
   delete simdMath;
   delete log;
@@ -37,19 +31,8 @@ std::vector<radar::cfarDet> cfar::getDetections(radar::floatIQ* fftIn){
     float forwardMean = 0;
     float backwardsMean = 0;
     float noiseEsti = 0;
-    //int detCount = 0;
-
     radar::cfarDet tmpDet;
-    if(++avgCount==numAvg){
-        simdMath->add(fftIn->iq,avgBuff,avgBuff,buffLen);
-        simdMath->normalize(avgBuff,numAvg,buffLen);
-        avgCount = 0;
-    }else{
-        dets.clear();
-        simdMath->add(fftIn->iq,avgBuff,avgBuff,buffLen);
-        return dets;
-    }
-    
+    std::vector<radar::cfarDet> dets;
     dets.reserve(1024);
 
     for(;bin<buffLen;++bin){
@@ -73,12 +56,11 @@ std::vector<radar::cfarDet> cfar::getDetections(radar::floatIQ* fftIn){
                 tmpDet.startBin = bin - buffLen/2;
                 tmpDet.stopBin  = bin - buffLen/2;
             }
-            tmpDet.power    = fftIn->iq[bin];
+            tmpDet.power    = 20*log10(fftIn->iq[bin]);
             tmpDet.freqHz   = fftIn->metaData.freqHz;
-            tmpDet.time     = fftIn->metaData.time;
+            tmpDet.time     = std::time(0);
             dets.push_back(tmpDet);
         }
     }
-    //send dets to gui  
     return dets;
 };

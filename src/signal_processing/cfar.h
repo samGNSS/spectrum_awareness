@@ -25,7 +25,6 @@ private:
   int numGuardBins_;
   int buffLen;
   int numAvg;
-  int avgCount;
   
   math* simdMath;
   console* log;
@@ -33,8 +32,6 @@ private:
   
   float* forwardSlice;
   float* backwardsSlice;
-  float* avgBuff;
-  std::vector<radar::cfarDet> dets;
   
 };
 

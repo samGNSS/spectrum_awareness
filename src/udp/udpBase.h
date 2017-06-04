@@ -26,7 +26,7 @@ public:
   void watchQueue();
   void pubIQ(radar::cfloatIQ iqData);
   void pubDets(std::vector<radar::cfarDet> dets);
-  void sendDets();
+  void sendDets(std::vector<std::vector<radar::cfarDet>> detVec);
   void sendIq();
   
 private:
