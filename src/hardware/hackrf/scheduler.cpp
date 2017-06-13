@@ -119,7 +119,7 @@ void sched::init(std::vector<radar::freqRange> scanBands, float dwellTime){
     log->debug(__FILENAME__,__LINE__,"Freq Range %d - %d",frequencies[2*i],frequencies[2*i+1]);
   }
   
-  result = hackrf_init_sweep(this->hackrf, frequencies, num_ranges, num_samples*2,20000000, 7500000, LINEAR);
+  result = hackrf_init_sweep(this->hackrf, frequencies, num_ranges, num_samples*2, 20000000, 0, LINEAR);
   
   log->info(__FILENAME__,__LINE__,"Return from sweep init: %d", result);
   

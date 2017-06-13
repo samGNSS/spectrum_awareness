@@ -8,7 +8,6 @@
 #include "src/util/radarDataTypes.h"
 #include "src/util/logger/consoleLog.h"
 #include "src/hardware/hackrf/scheduler.h"
-#include "src/qtplot/qtWindow.h"
 #include "src/udp/udpBase.h"
 
 
@@ -37,8 +36,8 @@ int main(int argc, char **argv) {
         ("duration",        po::value<double>(&duration)->default_value(0.0001), "duration for the tx waveform in seconds")
         ("rate",            po::value<uint32_t>(&rate)->default_value(20e6), "sample rate (sps)")
         ("baseBandFilerBw", po::value<uint32_t>(&filterBw)->default_value(15e6), "baseband filter bandwidth (Hz)")
-        ("rxVgaGain",       po::value<uint32_t>(&rxVgaGain)->default_value(20), "rx gain")
-        ("rxLnaGain",       po::value<uint32_t>(&rxLnaGain)->default_value(16), "rx lna gain")
+        ("rxVgaGain",       po::value<uint32_t>(&rxVgaGain)->default_value(30), "rx gain")
+        ("rxLnaGain",       po::value<uint32_t>(&rxLnaGain)->default_value(24), "rx lna gain")
         ("txVgaGain",       po::value<uint32_t>(&txVgaGain)->default_value(0), "tx gain")
         ("centerFreq",      po::value<uint64_t>(&centerFreq)->default_value(2437e6), "center frequency (Hz)");
     po::variables_map vm;
@@ -52,9 +51,9 @@ int main(int argc, char **argv) {
 							    rxLnaGain,
 							    txVgaGain};
  
-    std::vector<radar::freqRange> bands(10); 
+    std::vector<radar::freqRange> bands(1); 
     
-    float freq = 1800e6;
+    float freq = 90e6;
     float bw = 20e6;
     for(size_t i = 0;i<bands.size();++i){
       bands[i].first = freq;

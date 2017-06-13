@@ -12,15 +12,15 @@ namespace hackrf{
       //set sample rate
       int ret = hackrf_set_sample_rate_manual(device,frontEnd->sampRate,1);
       if (ret != HACKRF_SUCCESS){
-	log->error(__FILENAME__,__LINE__,"Failed to set sample rate with error code: %d",ret);
-	return -1;
+        log->error(__FILENAME__,__LINE__,"Failed to set sample rate with error code: %d",ret);
+        return -1;
       }
-//       //set filter bandwidth
-//       ret = hackrf_set_baseband_filter_bandwidth(device, frontEnd->baseBandFiltBw);
-//       if (ret != HACKRF_SUCCESS){
-// 	std::cout << "Failed to set filter bandwidth with error code: " << hackrf_error(ret) << std::endl;
-// 	return -1;
-//       }
+      //set filter bandwidth
+      ret = hackrf_set_baseband_filter_bandwidth(device, frontEnd->baseBandFiltBw);
+      if (ret != HACKRF_SUCCESS){
+        std::cout << "Failed to set filter bandwidth with error code: " << hackrf_error(ret) << std::endl;
+        return -1;
+      }
       
 //       //set center frequency
 //       ret = hackrf_set_freq(device, frontEnd->centerFreq);
@@ -33,8 +33,8 @@ namespace hackrf{
       ret = hackrf_set_vga_gain(device, frontEnd->rxVgaGain);
       ret |= hackrf_set_lna_gain(device, frontEnd->rxLnaGain);
       if (ret != HACKRF_SUCCESS){
-	log->error(__FILENAME__,__LINE__,"Failed to set front end gain with error code: %d",ret);
-	return -1;
+        log->error(__FILENAME__,__LINE__,"Failed to set front end gain with error code: %d",ret);
+        return -1;
       }
       
 //       //set tx gain

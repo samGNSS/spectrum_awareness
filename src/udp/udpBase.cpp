@@ -44,7 +44,7 @@ int udpSender::init(int port){
 
 void udpSender::watchQueue(){
     while(enabled){
-        if(detQueue.size() > 11){
+        if(detQueue.size() > 30){
             detMtx.lock();
             while(detQueue.size() > 0){
                 detVec.push_back(detQueue.front());

@@ -18,7 +18,6 @@
 #include "../../util/logger/consoleLog.h"
 #include "../../util/buffer/memBuffer.h"
 #include "../../udp/udpBase.h"
-#include "../../qtplot/qtplot.h"
 
 namespace hackrf{
 class proc{
@@ -38,7 +37,6 @@ class proc{
     FFT* fftProc; 
     math* simdMath;
     console* log;
-    qui* quiH;
     udpSender* udp;
     memBuff* memBuffer;
     std::vector<cfar*> cfarFilt;
@@ -63,6 +61,8 @@ class proc{
     int numBuffs;
     int numBands;
     uint16_t startFreq;
+    
+    static constexpr int blocksPerTransfer = 16; //I guess this is set in the firmware
     
   };
 }

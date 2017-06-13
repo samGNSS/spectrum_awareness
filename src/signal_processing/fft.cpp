@@ -39,7 +39,7 @@ void FFT::resetFFTSize(int fftSize,int inputSize){
 };
 
 void FFT::getFFT(radar::complexFloat* input, radar::complexFloat* output){
-  simdMath->multiply(input,window,input);
+  //simdMath->multiply(input,window,input);
   fftwf_complex* inputTMP = reinterpret_cast<fftwf_complex*>(input);
   fftwf_complex* outputTMP = reinterpret_cast<fftwf_complex*>(output);
   fftwf_execute_dft(forwardDFT,inputTMP,outputTMP);

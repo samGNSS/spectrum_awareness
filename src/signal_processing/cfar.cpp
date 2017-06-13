@@ -27,13 +27,14 @@ cfar::~cfar(){
 std::vector<radar::cfarDet> cfar::getDetections(radar::floatIQ* fftIn){
     //CFAR processing
     int bin = 0;
+    //int binCheck = buffLen>>1;
     int cell = 0;
     float forwardMean = 0;
     float backwardsMean = 0;
     float noiseEsti = 0;
     radar::cfarDet tmpDet;
     std::vector<radar::cfarDet> dets;
-    dets.reserve(1024);
+    dets.reserve(buffLen);
 
     for(;bin<buffLen;++bin){
         //get forwardSlice and backwardsSlice
@@ -48,19 +49,14 @@ std::vector<radar::cfarDet> cfar::getDetections(radar::floatIQ* fftIn){
         //compare to signal level
         noiseEsti = (forwardMean+backwardsMean)*alpha;
         if(fftIn->iq[bin] > noiseEsti){
-            //detection
-            if(bin < buffLen/2){
-                tmpDet.startBin = bin + buffLen/2;
-                tmpDet.stopBin  = bin + buffLen/2;
-            }else{
-                tmpDet.startBin = bin - buffLen/2;
-                tmpDet.stopBin  = bin - buffLen/2;
-            }
+            tmpDet.startBin = bin;
+            tmpDet.stopBin  = bin;
             tmpDet.power    = 20*log10(fftIn->iq[bin]);
             tmpDet.freqHz   = fftIn->metaData.freqHz;
             tmpDet.time     = std::time(0);
             dets.push_back(tmpDet);
         }
     }
+    //log->info(__FILENAME__,__LINE__,"NumDets: %d",dets.size());
     return dets;
 };
