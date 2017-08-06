@@ -12,7 +12,7 @@
 
 class cfar{
 public:
-  cfar(float alpha, int numCells, int numGuardBins, int buffLen, int numAvg);
+  cfar(float pfa, int numCells, int numGuardBins, int buffLen);
   ~cfar();
   std::vector<radar::cfarDet> getDetections(radar::floatIQ* fftIn);
 private:

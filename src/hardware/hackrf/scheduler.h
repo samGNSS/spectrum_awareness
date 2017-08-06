@@ -17,9 +17,9 @@
 namespace hackrf{
   class sched : baseSched{
     public:
-      sched(const sdr::device_params* device_options);
+      sched();
       ~sched();
-      virtual void init(std::vector<radar::freqRange> scanBands, float dwellTime);          //init hardware
+      virtual void init(sdr::deviceParams &frontEnd,sdr::scannerParams &scanner,sdr::detectorParams &detector);          //init hardware
       virtual void start();         //start threads
       virtual void stop();          //stop threads
       virtual void findDevices();   //find all sdrs attached to the computer
@@ -30,7 +30,6 @@ namespace hackrf{
       static int rx_callback(hackrf_transfer* transfer);
       
       //hackrf variables
-      const sdr::device_params* frontEnd;
       hackrf_device* hackrf; 		//device pointer
       
       //buffers and things...

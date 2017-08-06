@@ -19,51 +19,52 @@
 #include "../../util/buffer/memBuffer.h"
 #include "../../udp/udpBase.h"
 
-namespace hackrf{
-class proc{
-  public:
-    proc();
-    ~proc();
-    void init(int fftSize, int inputSize, int numBands,uint16_t startFreq); //init processors...filters and the like
-    void rx_monitor(radar::charBuff* rx_buff); //wait for samples to come from the hardware
-    void stop();
-    
-  private:
-    void signal_int(); //handle possible iq imbalance, frequency tuning, image rejection, and signal detection
-    void gui_handle(); //sends data to the gui
-    
-    
-    //signal processing classes
-    FFT* fftProc; 
-    math* simdMath;
-    console* log;
-    udpSender* udp;
-    memBuff* memBuffer;
-    std::vector<cfar*> cfarFilt;
-    
-    //threads
-    std::thread detThread;
-    std::mutex buffMutex;
-    std::condition_variable waitForBuff;
-    
-    //variables
-    std::vector<radar::cfloatIQ*> floatBuffs;
-    std::vector<radar::cfloatIQ*> fftBuffs;
-    std::vector<radar::floatIQ*> absBuffs;
-    std::vector<radar::cfarDet> procDets;
-    
-    bool buffRdy,enabled,waiting,sweepStarted;
-    
-    
-    int buffNum;
-    int procNum;
-    int buffLen;
-    int numBuffs;
-    int numBands;
-    uint16_t startFreq;
-    
-    static constexpr int blocksPerTransfer = 16; //I guess this is set in the firmware
-    
-  };
+namespace hackrf {
+class proc {
+public:
+proc();
+~proc();
+void init(sdr::detectorParams &detector,uint16_t startFreq);     //init processors...filters and the like
+void rx_monitor(radar::charBuff* rx_buff);     //wait for samples to come from the hardware
+void stop();
+
+private:
+void signal_int();     //handle possible iq imbalance, frequency tuning, image rejection, and signal detection
+void gui_handle();     //sends data to the gui
+void systemMonitor();
+
+
+//signal processing classes
+FFT* fftProc;
+math* simdMath;
+cfar* cfarFilt;
+
+//utilities
+console* log;
+udpSender* udp;
+memBuff* memBuffer;
+
+//threads
+std::thread detThread,monitorThread;
+std::mutex buffMutex;
+std::condition_variable waitForBuff;
+
+//variables
+std::vector<radar::cfloatIQ*> floatBuffs;
+std::vector<radar::cfloatIQ*> fftBuffs;
+std::vector<radar::floatIQ*> absBuffs;
+std::vector<radar::cfarDet> procDets;
+
+bool buffRdy,enabled,waiting,sweepStarted;
+
+int procNum;
+int buffLen;
+int numBuffs;
+int numDets;
+uint16_t startFreq;
+
+static constexpr int blocksPerTransfer = 16;     //I guess this is set in the firmware
+
+};
 }
 #endif

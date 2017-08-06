@@ -7,14 +7,15 @@ memBuff::memBuff(){
     ageOut = std::thread(std::bind(&memBuff::ageOutTimer, this));
     log = new console();
     age = std::chrono::seconds(10);
+    //db = databaseLogger::getInst();
 }
 
 memBuff::~memBuff(){
-    if(inst!=0){
-        enabled = false;
-        ageOut.join();
-        delete inst;
-    }
+    log->info(__FILENAME__,__LINE__,"Stopping mem buffer");
+    enabled = false;
+    ageOut.join();
+    delete log;
+    //delete db;
 }
 
 memBuff* memBuff::getInst(){
@@ -27,20 +28,19 @@ memBuff* memBuff::getInst(){
 void memBuff::publishDets(std::vector<radar::cfarDet> dets){
     //insert into map
     detMtx.lock();
-    for(radar::cfarDet det : dets){
-        detIt = detMap.find(det.time);
-        detMap.insert(detIt,std::pair<uint64_t,radar::cfarDet>(det.time,det));
-    }
+    uint64_t keyVal = dets.at(0).timeOn;
+    detIt = detMap.find(keyVal);
+    detMap.insert(detIt,std::pair<uint64_t,std::vector<radar::cfarDet>>(keyVal,dets));
     detMtx.unlock();
 }
 
-std::vector<radar::cfarDet> memBuff::getDetsDataInRange(uint64_t startTime, uint64_t endTime){
+std::vector<std::vector<radar::cfarDet>> memBuff::getDetsDataInRange(uint64_t startTime, uint64_t endTime){
     detMtx.lock();
-    std::map<uint64_t,radar::cfarDet>::iterator lowIt = detMap.lower_bound(startTime);
-    std::map<uint64_t,radar::cfarDet>::iterator highIt = detMap.upper_bound(endTime);
+    std::map<uint64_t,std::vector<radar::cfarDet>>::iterator lowIt  = detMap.lower_bound(startTime);
+    std::map<uint64_t,std::vector<radar::cfarDet>>::iterator highIt = detMap.upper_bound(endTime);
     detMtx.unlock();
     
-    std::vector<radar::cfarDet> ret;
+    std::vector<std::vector<radar::cfarDet>> ret;
     for(;lowIt!=highIt;++lowIt){
         ret.push_back(lowIt->second);
     }
@@ -51,8 +51,9 @@ std::vector<radar::cfarDet> memBuff::getDetsDataInRange(uint64_t startTime, uint
 void memBuff::ageOutDets(uint64_t startTime){
     log->debug(__FILENAME__,__LINE__,"Map size before: %d",detMap.size());
     detMtx.lock();
-    std::map<uint64_t,radar::cfarDet>::iterator highIt = detMap.upper_bound(startTime);
-    for(std::map<uint64_t,radar::cfarDet>::iterator it = detMap.begin();it!=highIt;++it){
+    std::map<uint64_t,std::vector<radar::cfarDet>>::iterator highIt = detMap.upper_bound(startTime);
+    for(std::map<uint64_t,std::vector<radar::cfarDet>>::iterator it = detMap.begin();it!=highIt;++it){
+        //db->logDets(it->second);
         detMap.erase(it);
     }
     detMtx.unlock();
@@ -62,6 +63,8 @@ void memBuff::ageOutDets(uint64_t startTime){
 void memBuff::ageOutTimer(){
     while(enabled){
         std::this_thread::sleep_for(age);
-        ageOutDets(detMap.begin()->first + 10);
+        if(enabled){
+            ageOutDets(detMap.begin()->first);
+        }
     }
 }

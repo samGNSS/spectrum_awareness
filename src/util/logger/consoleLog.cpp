@@ -18,19 +18,19 @@ console::~console(){}
 void console::send(lvl level, std::string origin, int lineNumber, std::string msg){
   //form message
   std::cout << color[level]
-            << "[" << strRep[level] 
+            << "[" << strRep[level]
             << " | " << origin
             << " | " << lineNumber << "]\t"
             << msg
             << color[reset] << "\n";
-  
+
 }
 
 void console::info(std::string origin, int lineNumber, std::string msg, ...){
     char     *args_msg;
     va_list   args;
     va_start(args, msg);
-    if(vasprintf(&args_msg, msg.c_str(), args) > 0);
+    vasprintf(&args_msg, msg.c_str(), args);
     this->send(lvl::INFO,origin,lineNumber,args_msg);
     va_end(args);
     free(args_msg);
@@ -40,7 +40,7 @@ void console::debug(std::string origin, int lineNumber, std::string msg, ...){
     char     *args_msg;
     va_list   args;
     va_start(args, msg);
-    if(vasprintf(&args_msg, msg.c_str(), args) > 0);
+    vasprintf(&args_msg, msg.c_str(), args);
     this->send(lvl::DEBUG,origin,lineNumber,args_msg);
     va_end(args);
     free(args_msg);
@@ -50,7 +50,7 @@ void console::warn(std::string origin, int lineNumber, std::string msg, ...){
     char     *args_msg;
     va_list   args;
     va_start(args, msg);
-    if(vasprintf(&args_msg, msg.c_str(), args) > 0);
+    vasprintf(&args_msg, msg.c_str(), args);
     this->send(lvl::WARNING,origin,lineNumber,args_msg);
     va_end(args);
     free(args_msg);
@@ -60,13 +60,8 @@ void console::error(std::string origin, int lineNumber, std::string msg, ...){
     char     *args_msg;
     va_list   args;
     va_start(args, msg);
-    if(vasprintf(&args_msg, msg.c_str(), args) > 0);
+    vasprintf(&args_msg, msg.c_str(), args);
     this->send(lvl::ERROR,origin,lineNumber,args_msg);
     va_end(args);
     free(args_msg);
 }
-
-
-
-
-

@@ -6,7 +6,7 @@
 *.exe
 *.o
 *.so
-#.pyc
+.pyc
 
 # Packages #
 ############
@@ -27,6 +27,7 @@
 *.sql
 *.sqlite
 *.cmake
+*.db
 # OS generated files #
 ######################
 .DS_Store

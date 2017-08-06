@@ -2,7 +2,7 @@
 
 #include <volk/volk.h>
 
-FFT::FFT(int fftSize,int inputSize):fftSize(fftSize){
+FFT::FFT(int fftSize,int inputSize,std::string windowType):fftSize(fftSize){
   outputMem = fftwf_alloc_complex(fftSize*sizeof(fftwf_complex));
   tmp = fftwf_alloc_complex(inputSize*sizeof(fftwf_complex));
   forwardDFT = fftwf_plan_dft_1d(fftSize,tmp,outputMem,FFTW_FORWARD,FFTW_ESTIMATE); 
@@ -10,7 +10,7 @@ FFT::FFT(int fftSize,int inputSize):fftSize(fftSize){
   
   //define window
   window = (radar::complexFloat*)volk_malloc(inputSize*sizeof(radar::complexFloat),volk_get_alignment());
-  this->setWindow(inputSize);
+  this->setWindow(windowType,inputSize);
   //math
   simdMath = new math(inputSize);
   
@@ -39,11 +39,22 @@ void FFT::resetFFTSize(int fftSize,int inputSize){
 };
 
 void FFT::getFFT(radar::complexFloat* input, radar::complexFloat* output){
-  //simdMath->multiply(input,window,input);
+  simdMath->multiply(input,window,input);
   fftwf_complex* inputTMP = reinterpret_cast<fftwf_complex*>(input);
   fftwf_complex* outputTMP = reinterpret_cast<fftwf_complex*>(output);
   fftwf_execute_dft(forwardDFT,inputTMP,outputTMP);
+  simdMath->normalize(output,fftSize,fftSize);
 };
+
+
+void FFT::getFFT_ABS(radar::complexFloat* input, radar::complexFloat* output){
+  simdMath->multiply(input,window,input);
+  fftwf_complex* inputTMP = reinterpret_cast<fftwf_complex*>(input);
+  fftwf_complex* outputTMP = reinterpret_cast<fftwf_complex*>(output);
+  fftwf_execute_dft(forwardDFT,inputTMP,outputTMP);
+  simdMath->normalize(output,fftSize,fftSize);
+};
+
 
 void FFT::getIFFT(radar::complexFloat* input, radar::complexFloat* output){
   fftwf_complex* inputTMP = reinterpret_cast<fftwf_complex*>(input);
@@ -51,10 +62,11 @@ void FFT::getIFFT(radar::complexFloat* input, radar::complexFloat* output){
   fftwf_execute_dft(inverseDFT,inputTMP,outputTMP);
 };
 
-void FFT::setWindow(int windowSize){
-  //TODO: add more windows to FFT
-  //only hanning for now
-  for(int i=0;i<windowSize;++i){
-    window[i] = 0.5f*(1.f - (float)std::cos(2*M_PI*i/(fftSize-1)));
-  }
+void FFT::setWindow(std::string windowType,int windowSize){
+    //Hanning window
+    if(windowType == "hanning"){
+        for(int i=0;i<windowSize;++i){
+            window[i] = 0.5f*(1.f - (float)std::cos(2*M_PI*i/(fftSize-1)));
+        }
+    }
 };

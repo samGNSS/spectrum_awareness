@@ -19,7 +19,7 @@
 namespace radar{
     //base types
     typedef std::complex<float> complexFloat;
-    typedef uint8_t charBuff;
+    typedef int8_t charBuff;
     typedef std::shared_ptr<complexFloat> complexFloatBuffPtr;
     typedef std::shared_ptr<charBuff> charBuffPtr;
     typedef std::pair<uint64_t,uint32_t> centerFreqAndBW;
@@ -30,12 +30,13 @@ namespace radar{
       uint64_t time;
       uint64_t freqHz;
       uint8_t band;
+      uint32_t sampRate;
       bool valid; 
     }iqMd;
     
     class charIQ{
     public:
-      charIQ(int_fast64_t buffSize_):buffSize(buffSize_){iq = (charBuff*)volk_malloc(buffSize*sizeof(charBuff),volk_get_alignment());};
+      charIQ(uint_fast64_t buffSize_):buffSize(buffSize_){iq = (charBuff*)volk_malloc(buffSize*sizeof(charBuff),volk_get_alignment());};
       ~charIQ(){volk_free(iq);};
       charBuff* iq;
       uint_fast64_t buffSize;
@@ -63,32 +64,51 @@ namespace radar{
 #pragma pack(push,1)
     //processed detection
     typedef struct{
-      int32_t startBin;
-      int32_t stopBin;
-      double power;
-      uint64_t time;
+      int32_t fftBin;
+      uint64_t timeOn;
+      uint64_t timeOnMicroSec;
       uint64_t freqHz;
+      double   power;
     }cfarDet;
-#pragma pack(pop)      
-
-    //processed detection
+    
+    //histogram channel
     typedef struct{
-      freqRange range;
-      double power;
-      uint64_t time;
-    }det;
+      uint32_t startFreq; 
+      uint32_t stopFreq;
+      uint64_t timeOn;
+      uint64_t timeOff;
+      double   confidence; 
+    }channel;
+#pragma pack(pop)      
 };
 
 
 //hardware data types
 namespace sdr{
     typedef struct{
-    uint64_t centerFreq;
-    uint32_t sampRate;
-    uint32_t baseBandFiltBw;
-    uint32_t rxVgaGain;
-    uint32_t rxLnaGain;
-    uint32_t txVgaGain;
-  }device_params;
+        uint64_t centerFreq;
+        uint32_t sampRate;
+        uint32_t baseBandFiltBw;
+        uint32_t rxVgaGain;
+        uint32_t rxLnaGain;
+        uint32_t txVgaGain;
+    }deviceParams;
+
+    typedef struct{
+        int startFreq;
+        int bandwidth;
+        int numBands;
+        float dwellTime;
+        bool enabled;
+    }scannerParams;
+
+    typedef struct{
+        int fftSize;
+        float pfa;
+        int numGuardBins;
+        int numAvgBins;
+        std::string windowType;
+    }detectorParams;
+  
 };
 #endif

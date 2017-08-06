@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
 project(plot_spectrum)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O4 -std=c++11 -Wall -pg")
 file(GLOB_RECURSE sources ./src/*.cpp ./src/*.c ./src/*.h)
@@ -10,6 +8,8 @@ add_executable(plot_spectrum main_plot_spectrum.cpp ${sources})
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 MESSAGE( STATUS "CMAKE_MODULE_PATH: " ${CMAKE_MODULE_PATH})
+
+#add_definitions(-DFILE_DUMP)
 
 ###############################################################################
 ## dependencies ###############################################################
@@ -93,13 +93,5 @@ target_link_libraries(plot_spectrum PUBLIC
   ${LIBUSB_LIBRARIES}
   ${FFTW3F_LIBRARIES}
   -lpthread
+  -lsqlite3
  ) 
- 
-#  target_link_libraries(filter_timing_test PUBLIC
-#   ${Boost_LIBRARIES}
-#   ${VOLK_LIBRARIES}
-#   ${LIBUSB_LIBRARIES}
-#   ${FFTW3F_LIBRARIES}
-#   -lpthread
-#   -lpython2.7
-#  ) 

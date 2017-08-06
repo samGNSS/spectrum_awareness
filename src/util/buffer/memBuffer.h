@@ -10,6 +10,7 @@
 
 #include "../radarDataTypes.h"
 #include "../logger/consoleLog.h"
+#include "../logger/databaseLogger.h"
 
 class memBuff{
 public:
@@ -17,7 +18,7 @@ public:
     ~memBuff();
     
     void publishDets(std::vector<radar::cfarDet> dets);
-    std::vector<radar::cfarDet> getDetsDataInRange(uint64_t startTime,uint64_t endTime);
+    std::vector<std::vector<radar::cfarDet>> getDetsDataInRange(uint64_t startTime,uint64_t endTime);
     void ageOutDets(uint64_t startTime);
     void ageOutTimer();
     
@@ -25,11 +26,12 @@ public:
 private:
     static memBuff* inst;
     console* log;
+    databaseLogger* db;
     
     memBuff();
     
-    std::map<uint64_t,radar::cfarDet> detMap;
-    std::map<uint64_t,radar::cfarDet>::iterator detIt;
+    std::map<uint64_t,std::vector<radar::cfarDet>> detMap;
+    std::map<uint64_t,std::vector<radar::cfarDet>>::iterator detIt;
     
     std::chrono::seconds age;
     bool enabled;

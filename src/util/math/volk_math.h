@@ -8,27 +8,34 @@ class math{
 public:
     math(int numSamps);
     ~math();
+    
+    //normalization methods
     void normalize(radar::complexFloat* input,float normConst);
     void normalize(float* input, float normConst,int numSamps);
+    void normalize(radar::complexFloat* input, float normConst,int numSamps);
 
+    //addition methods
     void add(radar::complexFloat* input1,radar::complexFloat* input2,radar::complexFloat* output);
     void add(float* input1 ,float* input2, float* output,int numSamps);
-
-    void runningAverage(radar::complexFloat* input1,radar::complexFloat* input2,radar::complexFloat* output);
-
+    void add_const(radar::complexFloat* input,float addConst);
+    
+    //magnitude squared
     void magSqrd(radar::complexFloat* input,float* output);
 
-    void add_const(radar::complexFloat* input,float addConst);
-
+    //multiplication
     void multiply(radar::complexFloat* input1,radar::complexFloat* input2, radar::complexFloat* output);
     void multiply(radar::complexFloat* input1,radar::complexFloat* input2, radar::complexFloat* output,int numSamps);
 
+    //standard deviation and mean
     void getMeanAndStdDev(float* input, float* mean,int numSamps);
 
+    //absolute value
     void abs(radar::complexFloat* input,float* output);
 
+    //linear to dB
     void lin2dB(float* input,float* output);
 
+    //uchar to complex float
     void interleavedUCharToComplexFloat(radar::charBuff* input,radar::complexFloat* output, int numSamps);
   
 private:

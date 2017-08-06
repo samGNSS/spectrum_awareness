@@ -7,6 +7,8 @@
 #include "src/hardware/hackrf/driver/device_setup.h"
 #include "src/util/radarDataTypes.h"
 #include "src/util/logger/consoleLog.h"
+#include "src/util/logger/databaseLogger.h"
+#include "src/util/config_parser/configParser.h"
 #include "src/hardware/hackrf/scheduler.h"
 #include "src/udp/udpBase.h"
 
@@ -24,54 +26,53 @@ int main(int argc, char **argv) {
     signal(SIGINT, handleInterrupt); 
     
     //variables to be set by po
-    std::string args;
-    double duration;
-    uint32_t rate,filterBw,rxVgaGain,rxLnaGain,txVgaGain;
-    uint64_t centerFreq;
+    std::string configFile;
+    
     //setup the program options
     po::options_description desc("Allowed options");
     desc.add_options()
-        ("help", "help message")
-        ("args",            po::value<std::string>(&args)->default_value(""), "single device address args")
-        ("duration",        po::value<double>(&duration)->default_value(0.0001), "duration for the tx waveform in seconds")
-        ("rate",            po::value<uint32_t>(&rate)->default_value(20e6), "sample rate (sps)")
-        ("baseBandFilerBw", po::value<uint32_t>(&filterBw)->default_value(15e6), "baseband filter bandwidth (Hz)")
-        ("rxVgaGain",       po::value<uint32_t>(&rxVgaGain)->default_value(30), "rx gain")
-        ("rxLnaGain",       po::value<uint32_t>(&rxLnaGain)->default_value(24), "rx lna gain")
-        ("txVgaGain",       po::value<uint32_t>(&txVgaGain)->default_value(0), "tx gain")
-        ("centerFreq",      po::value<uint64_t>(&centerFreq)->default_value(2437e6), "center frequency (Hz)");
+        ("help", "Monitor frequencies")
+        ("configFile",      po::value<std::string>(&configFile)->default_value("../configs/default.xml"), "xml configuration file");
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
     
-    const sdr::device_params frontEnd = sdr::device_params{centerFreq,
-							    rate,
-							    filterBw,
-							    rxVgaGain,
-							    rxLnaGain,
-							    txVgaGain};
- 
-    std::vector<radar::freqRange> bands(1); 
-    
-    float freq = 90e6;
-    float bw = 20e6;
-    for(size_t i = 0;i<bands.size();++i){
-      bands[i].first = freq;
-      bands[i].second = freq+bw;
-      freq += bw;
+    if (vm.count("help")) {  
+        std::cout << desc << "\n";
+        return 0;
     }
     
+    sdr::deviceParams frontEnd;
+    sdr::scannerParams scanner;
+    sdr::detectorParams detector;
+    
+    configParser *parser = new configParser(configFile);
+    
+    parser->getDetectorParams(detector);
+    parser->getScannerParams(scanner);
+    parser->getRadioParams(frontEnd);
+    
+    //const sdr::deviceParams quick = frontEnd;
+     
+    //init database
+    //databaseLogger* main_db_inst = databaseLogger::getInst(dBName);
+    
+//     //init udp sender
     udpSender* udp = udpSender::getInstance();
     udp->init(1234);   
-    
-    //start spectrum monitor
-    hackrf::sched* specSched = new hackrf::sched(&frontEnd);
+//     
+//     //start spectrum monitor
+    hackrf::sched* specSched = new hackrf::sched();
     specSched->findDevices();
-    specSched->init(bands,0.00001);
+    specSched->init(frontEnd,scanner,detector);
     specSched->start(); 
-       
-    while(flag){usleep(10000);};
     
+//     
+//     //run the system
+    while(flag){usleep(10000);};
+//     
+//     //clean up memory, the order here matters: delete the schedule first
     delete specSched;  
+//     //delete main_db_inst;
     return 0;
 }

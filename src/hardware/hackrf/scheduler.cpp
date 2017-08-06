@@ -24,22 +24,22 @@ bool sched::enabled;
 proc* sched::pro;
 console* sched::log;
 
-sched::sched(const sdr::device_params* device_options){
-  frontEnd = device_options;
-  log = new console();
+sched::sched(){
+    pro = new proc();
+    log = new console();
 }
 
 sched::~sched(){
-  //check threads have joined 
-  if (enabled)
-    this->stop(); //join threads
-    
-  delete pro;
-  
-  log->info(__FILENAME__,__LINE__,":STOPPED SPECTRUM MONITOR::\n");
+    //check threads have joined 
+    if (enabled)
+        this->stop(); //join threads
 
-  
-  delete log;
+    //stop processor
+    delete pro;
+
+    log->info(__FILENAME__,__LINE__,"Stopped scheduler");
+
+    delete log;
 }
 
 
@@ -52,51 +52,49 @@ void sched::findDevices(){
   }else{
     log->info(__FILENAME__,__LINE__,"Found hackrf");
   }
-}
-
-
-//init hardware
-void sched::init(std::vector<radar::freqRange> scanBands, float dwellTime){ 
+  
   log->info(__FILENAME__,__LINE__,"Initializing hardware");
 
-  int result = hackrf_open(&hackrf);
+  result = hackrf_open(&hackrf);
   if (result != HACKRF_SUCCESS){
     log->error(__FILENAME__,__LINE__,"Failed to open the device...stopping...");
     std::exit(-1);
   }else{
     log->info(__FILENAME__,__LINE__,"Opened hackrf");
   }
-  
+}
+
+
+//init hardware
+void sched::init(sdr::deviceParams &frontEnd,sdr::scannerParams &scanner,sdr::detectorParams &detector){ 
   //set up device front end
-  result = set_up_device(this->frontEnd,hackrf,log);
+  int result = set_up_device(&frontEnd,hackrf,log);
   if (result == -1){log->error(__FILENAME__,__LINE__,"Device set up failed");std::exit(-1);}
   log->info(__FILENAME__,__LINE__,"Return from device setup: %d",result);
-//   std::cout << "Return from device setup: " << result << "\n";
-  
-
   
   log->info(__FILENAME__,__LINE__,"Started Receiver");
   sleep(1);
   log->info(__FILENAME__,__LINE__,"Configuring sweep");
   sleep(1);
   //check number of tune bands, max number is 10
-  if(scanBands.size() > 10){
+  if(scanner.numBands > 10){
     log->warn(__FILENAME__,__LINE__, "Too many scan bands, only using the first 10");
-    scanBands.resize(10);
+    scanner.numBands = 10;
   }else{
-    log->info(__FILENAME__,__LINE__,"Using %d bands",scanBands.size());
+    log->info(__FILENAME__,__LINE__,"Using %d bands",scanner.numBands);
   };
   
   sleep(1);
   
   //get number of samples
   uint32_t num_samples = 0;
-  if(this->frontEnd->sampRate * dwellTime < 8192){
+  int numSamps = frontEnd.sampRate * scanner.dwellTime;
+  if(numSamps < 8192){
     log->warn(__FILENAME__,__LINE__,"Minimum number of samples is 8192");
     num_samples = 8192;
-  }else if((int)(this->frontEnd->sampRate * dwellTime) % 8192){
+  }else if((numSamps) % 8192){
     log->warn(__FILENAME__,__LINE__,"Number of samples must be a multiple of 8192");
-    num_samples = 8192*(int)std::ceil((float)this->frontEnd->sampRate * dwellTime / 8192.f);
+    num_samples = 8192*(int)std::ceil((float)numSamps / 8192.f);
     log->warn(__FILENAME__,__LINE__,"Number of samples: %d",num_samples);
   }
   
@@ -109,17 +107,19 @@ void sched::init(std::vector<radar::freqRange> scanBands, float dwellTime){
     std::exit(-1);
   };
   
-  int num_ranges = scanBands.size();
-  uint16_t frequencies[2*scanBands.size()];
-  for(size_t i=0;i<scanBands.size();++i){
-    frequencies[2*i]   = scanBands[i].first/1e6;
-    frequencies[2*i+1] = scanBands[i].second/1e6;
+  //get frequency ranges
+  int num_ranges = scanner.numBands;
+  uint16_t frequencies[2*scanner.numBands];
+  
+  for(size_t i=0;i<scanner.numBands;++i){
+    frequencies[2*i]   = (scanner.startFreq + scanner.bandwidth*i)/1e6;
+    frequencies[2*i+1] = (scanner.startFreq + scanner.bandwidth*(i+1))/1e6;
     int step_count = 1 + (frequencies[2*i+1] - frequencies[2*i] - 1)/ 20;
     frequencies[2*i+1] = frequencies[2*i] + step_count * 20;
     log->debug(__FILENAME__,__LINE__,"Freq Range %d - %d",frequencies[2*i],frequencies[2*i+1]);
   }
   
-  result = hackrf_init_sweep(this->hackrf, frequencies, num_ranges, num_samples*2, 20000000, 0, LINEAR);
+  result = hackrf_init_sweep(this->hackrf, frequencies, num_ranges, num_samples*2, scanner.bandwidth, 0, LINEAR);
   
   log->info(__FILENAME__,__LINE__,"Return from sweep init: %d", result);
   
@@ -127,17 +127,16 @@ void sched::init(std::vector<radar::freqRange> scanBands, float dwellTime){
   ready = false;
   
   //set up processor
-  pro = new proc();
-  pro->init(1024,num_samples,num_ranges,frequencies[0]);
+  pro->init(detector,frequencies[0]);
   
 }
 
 //start hardware
 void sched::start(){
   //init flow controls
-  enabled = true;
   log->info(__FILENAME__,__LINE__,"::STARTED SPECTRUM MONITOR::\n");
   sleep(5);
+  enabled = true;
 }
 
 //stop hardware
@@ -152,13 +151,10 @@ void sched::stop(){
 int sched::rx_callback(hackrf_transfer* transfer){
   if(enabled){
     //receive
-    rx_buff = (transfer->buffer);
+    rx_buff = reinterpret_cast<int8_t*>(transfer->buffer);
     
     pro->rx_monitor(rx_buff);
-  }else{
-    log->warn(__FILENAME__,__LINE__, "Not enabled");
   }
-  
   return 0;
 };
 

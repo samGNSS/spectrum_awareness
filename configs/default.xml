@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<monitor dbName = "log.db">
+    <radio args="">    
+        <center_frequency>2400000000</center_frequency>
+        <base_band_bandwidth>15000000</base_band_bandwidth>
+        <sample_rate>20000000</sample_rate>
+        <lna_gain>12</lna_gain>
+        <vga_gain>12</vga_gain>
+    </radio>
+
+    <scanner enabled="true">
+        <start_frequency>3000000000</start_frequency>
+        <bandwidth>20000000</bandwidth>
+        <num_bands>5</num_bands>
+        <dwell_time>0.001</dwell_time>
+    </scanner>
+
+    <detector window="hanning">
+        <fft_size>1024</fft_size>
+        <pfa>0.00001</pfa>
+        <num_guard_bins>4</num_guard_bins>
+        <num_avg_bins>4</num_avg_bins>
+    </detector>
+</monitor>

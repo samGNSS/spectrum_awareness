@@ -34,6 +34,10 @@ void math::normalize(radar::complexFloat* input, float normConst){
   volk_32f_s32f_normalize((float*)input, normConst, 2*buffSize);
 }
 
+void math::normalize(radar::complexFloat* input, float normConst,int numSamps){
+  volk_32f_s32f_normalize((float*)input, normConst, 2*numSamps);
+}
+
 void math::normalize(float* input, float normConst,int numSamps){
   volk_32f_s32f_normalize(input, normConst, numSamps);
 }
@@ -85,12 +89,13 @@ void math::lin2dB(float* input,float* output){
 
 /*
  * Convert uchar to complex float
+ * 
  */
 void math::interleavedUCharToComplexFloat(radar::charBuff* input, radar::complexFloat* output, int numSamps){
     int i = 0;
     int j = 0;
     for(;j<numSamps;++j,i+=2){
-        output[j] = radar::complexFloat(input[i],input[i+1])/128.f - one;
+        output[j] = radar::complexFloat(input[i],input[i+1])/128.f;// - one;
     }
 }
 

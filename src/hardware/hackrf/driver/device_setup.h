@@ -8,7 +8,7 @@
 #include "../../../util/logger/consoleLog.h"
 
 namespace hackrf{
-  inline int set_up_device(const sdr::device_params* frontEnd,hackrf_device* device,console* log){
+  inline int set_up_device(const sdr::deviceParams* frontEnd,hackrf_device* device,console* log){
       //set sample rate
       int ret = hackrf_set_sample_rate_manual(device,frontEnd->sampRate,1);
       if (ret != HACKRF_SUCCESS){
