@@ -68,5 +68,9 @@ void FFT::setWindow(std::string windowType,int windowSize){
         for(int i=0;i<windowSize;++i){
             window[i] = 0.5f*(1.f - (float)std::cos(2*M_PI*i/(fftSize-1)));
         }
+    }else if(windowType == "blackman"){
+        for(int i=0;i<windowSize;++i){
+            window[i] = 0.42 - 0.5*std::cos(2*M_PI*i/(fftSize-1)) + 0.08*std::cos(4*M_PI*i/(fftSize-1));
+        }
     }
 };
