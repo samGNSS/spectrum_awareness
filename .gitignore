@@ -39,4 +39,4 @@ ehthumbs.db
 Thumbs.db
 *build
 *kdev4
-
+*.gch

@@ -14,9 +14,6 @@ public:
 private:
     void getBins(std::vector<radar::cfarDet> dets);
     void getThresh();
-    
-    
-    console* log;
 };
 
 #endif

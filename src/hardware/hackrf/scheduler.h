@@ -15,23 +15,23 @@
 
 //TODO: implement some kind of common time base, could use the system time but it seems bad...
 namespace hackrf{
-  class sched : baseSched{
+  class scheduler : baseScheduler{
     public:
-      sched();
-      ~sched();
-      virtual void init(sdr::deviceParams &frontEnd,sdr::scannerParams &scanner,sdr::detectorParams &detector);          //init hardware
-      virtual void start();         //start threads
-      virtual void stop();          //stop threads
-      virtual void findDevices();   //find all sdrs attached to the computer
-      
+      scheduler();
+      ~scheduler();
+      void init(sdr::deviceParams &frontEnd,sdr::scannerParams &scanner,sdr::detectorParams &detector);          //init hardware
+      void start();         //start threads
+      void stop();          //stop threads
+      void findDevices();   //find all sdrs attached to the computer
+
     private:
       //private methods
       void rx_callback_control();   //handle rx
       static int rx_callback(hackrf_transfer* transfer);
-      
+
       //hackrf variables
       hackrf_device* hackrf; 		//device pointer
-      
+
       //buffers and things...
       static radar::charBuff* rx_buff;
       static uint32_t numRxSamps;
@@ -40,14 +40,15 @@ namespace hackrf{
       int_fast32_t band;
       int_fast32_t buff;
       int_fast64_t numSamps;
-      static proc* pro;
-      static console* log;
-      
+      static processor* pro;
+
       //thread controls
       static bool enabled;
-      static bool ready; 
+      static bool ready;
       static bool retuned;
-      
+
+      static constexpr int sampleMultiple = 8192; 
+
   };
 }
 

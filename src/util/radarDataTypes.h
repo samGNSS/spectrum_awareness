@@ -12,9 +12,6 @@
 #include <stdio.h>
 #include <stdint.h>
 
-//file name macro
-#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-
 //IQ/Detection data types
 namespace radar{
     //base types
@@ -24,16 +21,16 @@ namespace radar{
     typedef std::shared_ptr<charBuff> charBuffPtr;
     typedef std::pair<uint64_t,uint32_t> centerFreqAndBW;
     typedef std::pair<uint64_t,uint64_t> freqRange;
-        
-    
+
+
     typedef struct{
       uint64_t time;
       uint64_t freqHz;
       uint8_t band;
       uint32_t sampRate;
-      bool valid; 
+      bool valid;
     }iqMd;
-    
+
     class charIQ{
     public:
       charIQ(uint_fast64_t buffSize_):buffSize(buffSize_){iq = (charBuff*)volk_malloc(buffSize*sizeof(charBuff),volk_get_alignment());};
@@ -42,7 +39,7 @@ namespace radar{
       uint_fast64_t buffSize;
       iqMd metaData;
     };
-    
+
     class cfloatIQ{
     public:
       cfloatIQ(uint_fast64_t buffSize_):buffSize(buffSize_){iq = (complexFloat*)volk_malloc(buffSize*sizeof(complexFloat),volk_get_alignment());};
@@ -51,7 +48,7 @@ namespace radar{
       uint_fast64_t buffSize;
       iqMd metaData;
     };
-    
+
     class floatIQ{
     public:
       floatIQ(uint_fast64_t buffSize_):buffSize(buffSize_){iq = (float*)volk_malloc(buffSize*sizeof(float),volk_get_alignment());};
@@ -60,26 +57,33 @@ namespace radar{
       uint_fast64_t buffSize;
       iqMd metaData;
     };
-    
+
 #pragma pack(push,1)
     //processed detection
     typedef struct{
-      int32_t fftBin;
       uint64_t timeOn;
       uint64_t timeOnMicroSec;
       uint64_t freqHz;
       double   power;
     }cfarDet;
-    
+
+    //Target
+    typedef struct{
+      uint64_t timeOn;
+      uint64_t timeOnMicroSec;
+      centerFreqAndBW freqHz;
+      double   power;
+    }target;
+
     //histogram channel
     typedef struct{
-      uint32_t startFreq; 
+      uint32_t startFreq;
       uint32_t stopFreq;
       uint64_t timeOn;
       uint64_t timeOff;
-      double   confidence; 
+      double   confidence;
     }channel;
-#pragma pack(pop)      
+#pragma pack(pop)
 };
 
 
@@ -95,7 +99,7 @@ namespace sdr{
     }deviceParams;
 
     typedef struct{
-        int startFreq;
+        uint64_t startFreq;
         int bandwidth;
         int numBands;
         float dwellTime;
@@ -104,11 +108,12 @@ namespace sdr{
 
     typedef struct{
         int fftSize;
+        int freqSlip;
         float pfa;
         int numGuardBins;
         int numAvgBins;
         std::string windowType;
     }detectorParams;
-  
+
 };
 #endif

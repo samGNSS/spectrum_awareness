@@ -7,16 +7,16 @@ configParser::configParser(std::string configFileName){
     std::ifstream fileReader(configFileName);
     std::vector<char> buffer((std::istreambuf_iterator<char>(fileReader)), std::istreambuf_iterator<char>());
 	buffer.push_back('\0');
-	// Parse the buffer using the xml file parsing library into doc 
+	// Parse the buffer using the xml file parsing library into doc
 	_doc.parse<0>(&buffer[0]);
-    
+
     _rootNode =_doc.first_node("monitor");
     _dbName = _rootNode->first_attribute("dbName")->value();
-    
+
     parseDetector(_rootNode);
     parseRadio(_rootNode);
     parseScanner(_rootNode);
-    
+
 }
 
 configParser::~configParser(){}
@@ -24,10 +24,12 @@ configParser::~configParser(){}
 void configParser::parseDetector(rapidxml::xml_node<>* root){
     rapidxml::xml_node<>* detectorNode = root->first_node("detector");
     _detector.fftSize      = std::stod(detectorNode->first_node("fft_size")->value());
+    _detector.freqSlip     = std::stod(detectorNode->first_node("freq_slip")->value());
     _detector.pfa          = std::stof(detectorNode->first_node("pfa")->value());
     _detector.numAvgBins   = std::stod(detectorNode->first_node("num_avg_bins")->value());
     _detector.numGuardBins = std::stod(detectorNode->first_node("num_guard_bins")->value());
     _detector.windowType   = detectorNode->first_attribute("window")->value();
+
 }
 
 void configParser::parseRadio(rapidxml::xml_node<>* root){
@@ -43,7 +45,7 @@ void configParser::parseRadio(rapidxml::xml_node<>* root){
 void configParser::parseScanner(rapidxml::xml_node<>* root){
     rapidxml::xml_node<>* scannerNode = root->first_node("scanner");
     if(scannerNode->first_attribute("enabled")->value() == std::string("true")){
-        _scanner.startFreq = std::stod(scannerNode->first_node("start_frequency")->value());
+        _scanner.startFreq = (uint64_t)std::stod(scannerNode->first_node("start_frequency")->value());
         _scanner.bandwidth = std::stod(scannerNode->first_node("bandwidth")->value());
         _scanner.numBands  = std::stod(scannerNode->first_node("num_bands")->value());
         _scanner.dwellTime = std::stof(scannerNode->first_node("dwell_time")->value());
@@ -59,8 +61,8 @@ std::string configParser::getDatabaseName(){
 
 void configParser::getDetectorParams(sdr::detectorParams& detector){
     detector.fftSize      = _detector.fftSize;
-    detector.pfa          = _detector.pfa;          
-    detector.numAvgBins   = _detector.numAvgBins;   
+    detector.pfa          = _detector.pfa;
+    detector.numAvgBins   = _detector.numAvgBins;
     detector.numGuardBins = _detector.numGuardBins;
     detector.windowType   = _detector.windowType;
 }
@@ -85,6 +87,3 @@ void configParser::getScannerParams(sdr::scannerParams& scanner){
         scanner.enabled = false;
     }
 }
-
-
-

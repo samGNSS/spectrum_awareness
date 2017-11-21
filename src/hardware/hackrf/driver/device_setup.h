@@ -8,11 +8,11 @@
 #include "../../../util/logger/consoleLog.h"
 
 namespace hackrf{
-  inline int set_up_device(const sdr::deviceParams* frontEnd,hackrf_device* device,console* log){
+  inline int set_up_device(const sdr::deviceParams* frontEnd,hackrf_device* device){
       //set sample rate
       int ret = hackrf_set_sample_rate_manual(device,frontEnd->sampRate,1);
       if (ret != HACKRF_SUCCESS){
-        log->error(__FILENAME__,__LINE__,"Failed to set sample rate with error code: %d",ret);
+        console::error(__FILENAME__,__LINE__,"Failed to set sample rate with error code: %d",ret);
         return -1;
       }
       //set filter bandwidth
@@ -21,29 +21,29 @@ namespace hackrf{
         std::cout << "Failed to set filter bandwidth with error code: " << hackrf_error(ret) << std::endl;
         return -1;
       }
-      
+
 //       //set center frequency
 //       ret = hackrf_set_freq(device, frontEnd->centerFreq);
 //       if (ret != HACKRF_SUCCESS){
-// 	log->error(__FILENAME__,__LINE__,"Failed to set center frequency error code: %d",ret);
+// 	console::error(__FILENAME__,__LINE__,"Failed to set center frequency error code: %d",ret);
 // 	return -1;
 //       }
-//       
+//
       //set rx gains
       ret = hackrf_set_vga_gain(device, frontEnd->rxVgaGain);
       ret |= hackrf_set_lna_gain(device, frontEnd->rxLnaGain);
       if (ret != HACKRF_SUCCESS){
-        log->error(__FILENAME__,__LINE__,"Failed to set front end gain with error code: %d",ret);
+        console::error(__FILENAME__,__LINE__,"Failed to set front end gain with error code: %d",ret);
         return -1;
       }
-      
+
 //       //set tx gain
 //       ret = hackrf_set_txvga_gain(device, frontEnd->txVgaGain);
 //       if (ret != HACKRF_SUCCESS){
-// 	log->error(__FILENAME__,__LINE__,"Failed to set tx front end gain with error code: %d",ret);
+// 	console::error(__FILENAME__,__LINE__,"Failed to set tx front end gain with error code: %d",ret);
 // 	return -1;
 //       }
-//       
+//
       return 0;
   };
 };

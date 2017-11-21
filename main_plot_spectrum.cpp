@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-#include <signal.h> 
+#include <signal.h>
 
 #include <boost/program_options.hpp>
 
@@ -21,13 +21,14 @@ void handleInterrupt(int sig){
 
 namespace po = boost::program_options;
 using namespace radar;
+
 int main(int argc, char **argv) {
-    
-    signal(SIGINT, handleInterrupt); 
-    
+
+    signal(SIGINT, handleInterrupt);
+
     //variables to be set by po
     std::string configFile;
-    
+
     //setup the program options
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -36,43 +37,48 @@ int main(int argc, char **argv) {
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
-    
-    if (vm.count("help")) {  
+
+    if (vm.count("help")) {
         std::cout << desc << "\n";
         return 0;
     }
-    
-    sdr::deviceParams frontEnd;
-    sdr::scannerParams scanner;
-    sdr::detectorParams detector;
-    
+
+    //parse the config file
+    sdr::deviceParams frontEnd;    //radio settings
+    sdr::scannerParams scanner;    //scanner settings
+    sdr::detectorParams detector;  //detector settings
+
     configParser *parser = new configParser(configFile);
-    
-    parser->getDetectorParams(detector);
-    parser->getScannerParams(scanner);
-    parser->getRadioParams(frontEnd);
-    
-    //const sdr::deviceParams quick = frontEnd;
-     
+
+    parser->getDetectorParams(detector); //read in detector settings
+    parser->getScannerParams(scanner);   //read in scanner settings
+    parser->getRadioParams(frontEnd);    //read in radio settings
+
     //init database
-    //databaseLogger* main_db_inst = databaseLogger::getInst(dBName);
-    
-//     //init udp sender
-    udpSender* udp = udpSender::getInstance();
-    udp->init(1234);   
-//     
-//     //start spectrum monitor
-    hackrf::sched* specSched = new hackrf::sched();
+    databaseLogger* main_db_inst = databaseLogger::getInst(parser->getDatabaseName());
+
+    //init udp sender
+    //udpSender* udp = udpSender::getInstance();
+    //udp->init(1234);
+
+    //start spectrum monitor
+    hackrf::scheduler* specSched = new hackrf::scheduler();
+
+    //look for a supported device, system only supports the Hackrf right now
     specSched->findDevices();
+
+    //initialize the system
     specSched->init(frontEnd,scanner,detector);
-    specSched->start(); 
-    
-//     
-//     //run the system
-    while(flag){usleep(10000);};
-//     
-//     //clean up memory, the order here matters: delete the schedule first
-    delete specSched;  
-//     //delete main_db_inst;
+
+    //start the system
+    specSched->start();
+
+    //wait for kill signal
+    while(flag){sleep(1);};
+
+    //clean up memory, the order here matters: delete the schedule first
+    delete specSched;
+    delete main_db_inst;
+    delete parser;
     return 0;
 }

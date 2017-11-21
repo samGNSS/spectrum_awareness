@@ -1,32 +1,52 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.8)
 project(plot_spectrum)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O4 -std=c++11 -Wall -pg")
 file(GLOB_RECURSE sources ./src/*.cpp ./src/*.c ./src/*.h)
- 
+
 add_executable(plot_spectrum main_plot_spectrum.cpp ${sources})
+
+add_subdirectory(./tests)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 MESSAGE( STATUS "CMAKE_MODULE_PATH: " ${CMAKE_MODULE_PATH})
 
-#add_definitions(-DFILE_DUMP)
+add_definitions(-DFILE_DUMP)
 
 ###############################################################################
 ## dependencies ###############################################################
 ###############################################################################
 
 #########################################################
-#Boost: program options (still the best)   
-######################################################### 
-find_package(Boost 1.5.4 COMPONENTS program_options REQUIRED)
+#Boost: program options (still the best)
+#########################################################
+########################################################################
+# Setup Boost
+########################################################################
+MESSAGE(STATUS "")
+MESSAGE(STATUS "Configuring Boost C++ Libraries...")
+SET(BOOST_REQUIRED_COMPONENTS
+    program_options
+)
+
+#Python API requirements
+MESSAGE(STATUS "Looking for required Boost components...")
+FIND_PACKAGE(Boost 1.63.0 COMPONENTS ${BOOST_REQUIRED_COMPONENTS})
+
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
+
+MESSAGE(STATUS "Boost include directories: ${Boost_INCLUDE_DIRS}")
+MESSAGE(STATUS "Boost library directories: ${Boost_LIBRARY_DIRS}")
+MESSAGE(STATUS "Boost libraries: ${Boost_LIBRARIES}")
 
 #########################################################
-#Volk 
-######################################################### 
+#Volk
+#########################################################
 find_package(Volk REQUIRED)
 
 #########################################################
-#fftw    
+#fftw
 #########################################################
 FIND_PATH(
     FFTW3F_INCLUDE_DIRS
@@ -58,7 +78,7 @@ FIND_LIBRARY(
 )
 
 #########################################################
-#libusb bullshit    
+#libusb bullshit
 #########################################################
 IF (NOT WIN32)
   # use pkg-config to get the directories and then use these values
@@ -94,4 +114,4 @@ target_link_libraries(plot_spectrum PUBLIC
   ${FFTW3F_LIBRARIES}
   -lpthread
   -lsqlite3
- ) 
+ )

@@ -5,10 +5,9 @@
 
 #include "../../util/radarDataTypes.h"
 
-class baseSched{
+class baseScheduler{
 public:
-  //baseSched();
-  virtual ~baseSched(){};
+  virtual ~baseScheduler(){};
   virtual void findDevices() = 0;
   virtual void init(sdr::deviceParams &frontEnd,sdr::scannerParams &scanner,sdr::detectorParams &detector) = 0;
   virtual void start() = 0;

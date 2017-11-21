@@ -11,14 +11,11 @@ udpSender* udpSender::getInstance(){
     return inst;
 };
 
-udpSender::udpSender(){
-    log = new console();
-}
+udpSender::udpSender(){}
 
 udpSender::~udpSender(){
     if(inst){
         delete inst;
-        delete log;
     }
 }
 
@@ -26,18 +23,18 @@ int udpSender::init(int port){
     //set up threads
     enabled = true;
     queueMonitor = std::thread(std::bind(&udpSender::watchQueue, this));
-    
+
     //get socket and return
     if ((this->sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-        log->error(__FILENAME__,__LINE__,"Failed to create socket");
+        console::error(__FILENAME__,__LINE__,"Failed to create socket");
         sleep(10);
     }
-    
+
     memset((char *)&sAddr, 0, sizeof(sAddr));
     sAddr.sin_family = AF_INET;
     sAddr.sin_addr.s_addr = htonl(0x7F000001);
     sAddr.sin_port = htons(port);
-    
+
     return this->sock;
 }
 
@@ -86,10 +83,8 @@ void udpSender::sendDets(std::vector<std::vector<radar::cfarDet>> detVec){
         for(radar::cfarDet det : localDet){
             numBytes = sendData(reinterpret_cast<char*>(&det),sizeof(det));
             if(numBytes < 0){
-                log->error(__FILENAME__,__LINE__,"Error sending detections");
+                console::error(__FILENAME__,__LINE__,"Error sending detections");
             }
         }
     }
 }
-
-

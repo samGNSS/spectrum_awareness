@@ -19,7 +19,7 @@
 
 class udpSender{
 public:
-  //member functions  
+  //member functions
   static udpSender* getInstance();
   ~udpSender();
   int init(int port);
@@ -28,17 +28,17 @@ public:
   void pubDets(std::vector<radar::cfarDet> dets);
   void sendDets(std::vector<std::vector<radar::cfarDet>> detVec);
   void sendIq();
-  
+
 private:
   udpSender();
   static udpSender* inst;
-  
+
   int sendData(char* buf,int size);
-  
+
   //condition variable
   //std::condition_variable sendDets;
   //std::condition_variable sendIq;
-  
+
   //threads
   std::thread queueMonitor;
   bool enabled;
@@ -46,28 +46,27 @@ private:
   //mutexes to protect the queues
   std::mutex detMtx;
   std::mutex iqMtx;
-  
+
   //queues
   std::queue<std::vector<radar::cfarDet>> detQueue;
   std::vector<std::vector<radar::cfarDet>> detVec;
   std::queue<radar::cfloatIQ> iQQueue;
-  
+
   //socket
   int sock;
   struct sockaddr_in sAddr;
   struct sockaddr_in retAddr;
 
-  
+
   //pretty prints
-  console* log;
 };
 
 
 // class udpReceiver{
 // public:
-//   
+//
 // private:
-//   
+//
 //};
 
 #endif

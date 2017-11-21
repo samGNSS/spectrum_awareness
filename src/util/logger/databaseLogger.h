@@ -12,18 +12,18 @@ public:
     static databaseLogger* getInst(std::string dbName);
     static databaseLogger* getInst();
     ~databaseLogger();
-    
-    void logDets(std::vector<radar::cfarDet> dets);
+
+    void logDets(std::vector<radar::target> dets);
     //void logChannels(std::vector<radar::cfarDet> dets);
-private:    
+private:
     databaseLogger(std::string dbName);
     static databaseLogger* inst;
-    
-    void detLoggerWorker(); 
-        
+
+    void detLoggerWorker();
+
     //db pointer
     sqlite::database* db;
-        
+
     //reference counter
     static size_t refCount;
 };
