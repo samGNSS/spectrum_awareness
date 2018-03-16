@@ -32,7 +32,6 @@ cfar::~cfar(){
 };
 
 void cfar::InitTrainingCells(float* input){
-
     m_forwardNoiseEstimate = 0; m_forwardStart = m_numGuardBins; m_forwardEnd = m_numCells + m_numGuardBins - 1;
     m_reverseNoiseEstimate = 0; m_reverseStart = m_buffLen - m_numCells - m_numGuardBins; m_reverseEnd = m_buffLen - m_numGuardBins - 1;
 
@@ -66,9 +65,6 @@ std::vector<radar::target> cfar::getDetections(radar::floatIQ* fftIn){
 
         dbgFile.write((char*)&noiseEsti,sizeof(float));
 
-        // console::debug(__FILENAME__,__LINE__, "Input mag: %lf, Noise estimate: %lf",fftIn->iq[bin],noiseEsti);
-
-
         if(fftIn->iq[bin] > noiseEsti){
             std::pair<uint,uint> timeVal = time->getTime();
             //FFT shift
@@ -85,6 +81,7 @@ std::vector<radar::target> cfar::getDetections(radar::floatIQ* fftIn){
             dets.push_back(tmpDet);
         }
 
+        //recalculate noise estimate
         m_forwardNoiseEstimate -= fftIn->iq[m_forwardStart];
         m_reverseNoiseEstimate -= fftIn->iq[m_reverseStart];
 

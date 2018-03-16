@@ -43,9 +43,9 @@ void FFT::getFFT(radar::complexFloat* input, radar::complexFloat* output){
 
 
 void FFT::getFFT_ABS(radar::complexFloat* input, float* output){
-  math::multiply(input,window, input, fftSize);
-  std::memmove(this->tmp,input,sizeof(fftwf_complex)*this->fftSize);
-  fftwf_execute_dft(forwardDFT,this->tmp,this->outputMem);
+  math::multiply(input, window, input, fftSize);
+  std::memmove(this->tmp, input, sizeof(fftwf_complex)*this->fftSize);
+  fftwf_execute_dft(forwardDFT, this->tmp,this->outputMem);
   radar::complexFloat* out = reinterpret_cast<radar::complexFloat*>(this->outputMem);
   math::normalize(out, (float)fftSize, fftSize);
   math::magSqrd(out, output, fftSize);

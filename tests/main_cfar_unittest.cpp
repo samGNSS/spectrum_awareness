@@ -27,7 +27,7 @@ bool test1(cfar* processor,int fftSize){
         signal.iq[i] += std::complex<float>(std::cos((float)2*M_PI*1000*i/10000),std::sin((float)2*M_PI*1000*i/10000));
         signal.iq[i] += std::complex<float>(std::cos((float)2*M_PI*1100*i/10000),std::sin((float)2*M_PI*1100*i/10000));
         signal.iq[i] += std::complex<float>(std::cos((float)2*M_PI*1200*i/10000),std::sin((float)2*M_PI*1200*i/10000));
-        signal.iq[i] += std::complex<float>(std::cos((float)2*M_PI*1300*i/10000),std::sin((float)2*M_PI*1300*i/10000));
+        signal.iq[i] += std::complex<float>(std::cos((float)2*M_PI*5300*i/10000),std::sin((float)2*M_PI*5300*i/10000));
     }
 
     writeFFT<std::complex<float>>(signal.iq, 1024, "cfar_test_fft.bin");
@@ -59,7 +59,7 @@ bool test1(cfar* processor,int fftSize){
 int main(){
 
     console::info(__FILENAME__, __LINE__, "Running CFAR unit test");
-    cfar* processor = new cfar(0.001,5,2,1024,5,10000);
+    cfar* processor = new cfar(0.001,2,2,1024,5,10000);
     test1(processor,1024);
 
     delete processor;

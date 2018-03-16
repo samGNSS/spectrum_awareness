@@ -30,7 +30,7 @@ scheduler::scheduler(){
 scheduler::~scheduler(){
     //check threads have joined
     if (enabled)
-        this->stop(); //join threads
+        this->stop();
 
     //stop processor
     delete pro;
@@ -110,7 +110,7 @@ void scheduler::init(sdr::deviceParams &frontEnd,sdr::scannerParams &scanner,sdr
         int num_ranges = scanner.numBands;
         uint16_t frequencies[2*scanner.numBands];
 
-        for(size_t i=0;i<(size_t)scanner.numBands;++i){
+        for(size_t i=0; i<(size_t)scanner.numBands; ++i){
             frequencies[2*i]   = (scanner.startFreq + scanner.bandwidth*i)/1e6;     //start
             frequencies[2*i+1] = (scanner.startFreq + scanner.bandwidth*(i+1))/1e6; //end
 

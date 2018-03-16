@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<monitor dbName = "log.db" udpTxPort="1234" udpRxPort="5678" interfaceType="emulator">
+    <radio args="">
+        <sample_rate>20000000</sample_rate>
+        <waveform>LFM</waveform>
+        <bandwidth_Hz>200000</bandwidth_Hz>
+        <num_targets>5</num_targets>
+        <seperation_Hz>1000000<seperation_Hz>
+    </radio>
+
+    <scanner enabled="false"></scanner>
+
+    <detector enabled ="true" window="blackman">
+        <fft_size>1024</fft_size> <!-- Detector FFT Size -->
+        <freq_slip>500000</freq_slip> <!-- Detector frequency slip in Hz -->
+        <pfa>0.00001</pfa>
+        <num_guard_bins>4</num_guard_bins>
+        <num_avg_bins>4</num_avg_bins>
+    </detector>
+</monitor>

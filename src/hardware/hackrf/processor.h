@@ -40,19 +40,11 @@ void SystemMonitor();
 
 #ifdef debug
 std::ofstream dbgFile;
-// template<typename T> void writeFFT(std::ofstream& ofile, int32_t numSamps, T* fftIn){
-//     ofile.write(reinterpret_cast<const char*>(numSamps), sizeof(int32_t));
-//     ofile.write(reinterpret_cast<const char*>(fftIn), numSamps*sizeof(T));
-// }
 #endif
 
 //signal processing classes
 FFT*  m_fftProc;
 cfar* m_cfarFilt;
-
-//utilities
-// udpSender* udp;
-// memBuff* memBuffer;
 
 //threads
 std::thread m_detThread, m_monitorThread;

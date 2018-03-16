@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <memory>
+
 #include <signal.h>
 
 #include <boost/program_options.hpp>
@@ -48,37 +50,26 @@ int main(int argc, char **argv) {
     sdr::scannerParams scanner;    //scanner settings
     sdr::detectorParams detector;  //detector settings
 
-    configParser *parser = new configParser(configFile);
+    std::unique_ptr<configParser> parser = std::unique_ptr<configParser>(new configParser(configFile));
 
     parser->getDetectorParams(detector); //read in detector settings
     parser->getScannerParams(scanner);   //read in scanner settings
     parser->getRadioParams(frontEnd);    //read in radio settings
 
-    //init database
-    databaseLogger* main_db_inst = databaseLogger::getInst(parser->getDatabaseName());
-
-    //init udp sender
-    //udpSender* udp = udpSender::getInstance();
-    //udp->init(1234);
-
     //start spectrum monitor
-    hackrf::scheduler* specSched = new hackrf::scheduler();
+    std::unique_ptr<hackrf::scheduler> scheduler = std::unique_ptr<hackrf::scheduler>(new hackrf::scheduler());
 
     //look for a supported device, system only supports the Hackrf right now
-    specSched->findDevices();
+    scheduler->findDevices();
 
     //initialize the system
-    specSched->init(frontEnd,scanner,detector);
+    scheduler->init(frontEnd,scanner,detector);
 
     //start the system
-    specSched->start();
+    scheduler->start();
 
     //wait for kill signal
     while(flag){sleep(1);};
 
-    //clean up memory, the order here matters: delete the schedule first
-    delete specSched;
-    delete main_db_inst;
-    delete parser;
     return 0;
 }

@@ -11,8 +11,6 @@
 using namespace hackrf;
 
 processor::processor(){
-    //memory buffer
-    // memBuffer = memBuff::getInst();
     m_numDets = 0;
 
 #ifdef debug
@@ -26,11 +24,9 @@ processor::~processor(){
 
     delete m_fftProc;
     delete m_cfarFilt;
-    //delete memBuffer;
 
     console::info(__FILENAME__,__LINE__,"Stopped processor");
 
-    m_fftBuffs.clear();
     m_absBuffs.clear();
     m_floatBuffs.clear();
 }
@@ -49,8 +45,8 @@ void processor::Stop(){
 
 void processor::Init(sdr::detectorParams &detector, uint16_t startFreq, uint16_t endFreq)
 {
-    m_startFreq = startFreq;
-    m_endFreq   = endFreq;
+    m_startFreq = startFreq*1e6;
+    m_endFreq   = endFreq*1e6;
 
     //Thread controls
     m_enabled      = true;
@@ -66,7 +62,6 @@ void processor::Init(sdr::detectorParams &detector, uint16_t startFreq, uint16_t
 
     //allocate buffs
     m_floatBuffs.resize(m_blocksPerTransfer);
-    m_fftBuffs.resize(m_blocksPerTransfer);
     m_absBuffs.resize(m_blocksPerTransfer);
     for(int buff=0;buff<m_blocksPerTransfer;++buff){
         //pre-fft
@@ -103,7 +98,7 @@ void processor::RxMonitor(radar::charBuff* rx_buff)
         }
 
         //check if we started the sweep
-        if(frequency==(uint64_t)(m_startFreq*1e6)){
+        if(frequency==(uint64_t)(m_startFreq)){
             m_sweepStarted = true;
         }
 
@@ -115,9 +110,9 @@ void processor::RxMonitor(radar::charBuff* rx_buff)
 
         //invalid frequency
         if(frequency > m_endFreq) {
-			rx_buff += BYTES_PER_BLOCK;
-			continue;
-		}
+            rx_buff += BYTES_PER_BLOCK;
+            continue;
+        }
 
         math::interleavedUCharToComplexFloat(rx_buff, m_floatBuffs[band]->iq,BYTES_PER_BLOCK>>1);
         m_floatBuffs[band]->metaData.valid  = true;
@@ -125,8 +120,6 @@ void processor::RxMonitor(radar::charBuff* rx_buff)
         m_floatBuffs[band]->metaData.time   = std::time(0);
 
         // console::warn(__FILENAME__,__LINE__,"buff frequency: %llu",frequency);
-
-
         rx_buff += BYTES_PER_BLOCK;
     }
 
@@ -135,7 +128,7 @@ void processor::RxMonitor(radar::charBuff* rx_buff)
         m_buffRdy = true;
         m_waitForBuff.notify_one();
     }else{
-        console::warn(__FILENAME__, __LINE__, "Proc overflow!");
+        console::warn(__FILENAME__, __LINE__, "Processor Overflow!");
     }
 
 }
